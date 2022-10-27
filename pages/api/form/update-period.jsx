@@ -21,8 +21,6 @@ export default async (req, res) => {
         )
 
         const getResult = await query(`SELECT * FROM pip WHERE id = ?`, pipID)
-        // For Dev
-        // var to = "joe.labanza@onsemi.com,joe.labanza@onsemi.com"
         // For Prod
         var to = getResult[0].originator_mail+","+getResult[0].department_head_mail
         var body =`  

@@ -84,8 +84,6 @@ export default async (req, res) => {
           getHRAdmin[0].ffid
         ]
       )
-      // For Dev
-      //var to = "joe.labanza@onsemi.com,joe.labanza@onsemi.com"
       // For Prod
       var to = originator_mail+","+department_head_mail
       var body =`  
