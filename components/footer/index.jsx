@@ -38,7 +38,7 @@ export default function LargeWithLogoCentered() {
           <Logo />
         </Flex>
         <Text pt={6} fontSize={'sm'} textAlign={'center'}>
-          © 2022 APPLICATIONS ENGINEERING
+          © {new Date().getFullYear()} APPLICATIONS ENGINEERING
         </Text>
         <Text pt={0} fontSize={'sm'} textAlign={'center'}>{process.env.NEXT_PUBLIC_VERSION}</Text>
       </Box>

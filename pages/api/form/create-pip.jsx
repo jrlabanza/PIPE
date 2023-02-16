@@ -85,7 +85,7 @@ export default async (req, res) => {
         ]
       )
       // For Prod
-      var to = originator_mail+","+department_head_mail
+      var to = originator_mail+","+department_head_mail+","+mail
       var body =`  
       <style>
         body
@@ -125,7 +125,7 @@ export default async (req, res) => {
           <td>${current_status}</td>
           <td>${user_name}</td>
           <td>${department_code}</td>
-          <td><a href='${process.env.NEXT_PUBLIC_HOST_ADDRESS}:${process.env.NEXT_PUBLIC_PORT}/view?pipID=${formID}'>VIEW</a></td>
+          <td><a href='${process.env.NEXT_PUBLIC_HOST_ADDRESS}:${process.env.NEXT_PUBLIC_PORT}/viewPIP?ID=${formID}'>VIEW</a></td>
         </tr>
       </table>
       <br>

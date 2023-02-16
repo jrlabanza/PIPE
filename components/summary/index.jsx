@@ -110,7 +110,7 @@ export default function Summary(
               </Thead>
               <Tbody>
               {pipGoals?.map((item, i) => (
-                <Tr>
+                <Tr key={i}>
                   <Td>{i+1}</Td>
                   <Td style={{"whiteSpace": "pre-wrap"}}>
                     1.{item.target_area_for_improvement}<br/>

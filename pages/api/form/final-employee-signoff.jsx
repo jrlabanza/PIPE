@@ -8,7 +8,7 @@ export default async (req, res) => {
         `
         SELECT *
         FROM pip
-        WHERE id = ? AND (department_head_approval_status = "APPROVED" AND hr_manager_approval_status = "APPROVED") AND isDeleted = 0
+        WHERE id = ? AND (department_head_approval_status = "ACKNOWLEDGED" AND hr_manager_approval_status = "ACKNOWLEDGED") AND isDeleted = 0
       `,
         id
       )
@@ -24,7 +24,7 @@ export default async (req, res) => {
         `
         SELECT *
         FROM pip
-        WHERE id = ? AND (department_head_approval_status = "APPROVED" AND hr_manager_approval_status = "APPROVED" AND employee_approval_status = "APPROVED") AND isDeleted = 0
+        WHERE id = ? AND (department_head_approval_status = "ACKNOWLEDGED" AND hr_manager_approval_status = "ACKNOWLEDGED" AND employee_approval_status = "ACKNOWLEDGED") AND isDeleted = 0
       `,
         id
       )

@@ -9,7 +9,7 @@ import Moment from 'react-moment'
 const columns = [
   {
     name: 'PIP ID',
-    selector: row => "PIP-"+(row.id).toLocaleString('en-US', {minimumIntegerDigits: 4, useGrouping:false}),
+    selector: row => process.env.NEXT_PUBLIC_LOCATION+(row.id).toLocaleString('en-US', {minimumIntegerDigits: 4, useGrouping:false}),
     sortable: true,
   },
   {
@@ -73,30 +73,30 @@ const columns = [
     selector: row => <Moment format="YYYY/MM/DD HH:mm:ss" date={row.date_submitted}></Moment>,
     sortable: true,
   },
-  {
-    cell:(row) =>
-    <>
-      <NextLink
-        href={"/viewPIP?ID="+row.formID}
-      > 
-        <Button 
-          colorScheme="teal"
-          bgGradient="linear(to-r, teal.400, teal.500, teal.600)"
-          color="white"
-          variant="solid"
-          loadingText="Logging In"
-          size="xs"
-          leftIcon={<ViewIcon />}
-        >
-          View
-        </Button>
-      </NextLink>
-    </>
-    ,
-    ignoreRowClick: true,
-    allowOverflow: true,
-    button: true,
-  },
+  // {
+  //   cell:(row) =>
+  //   <>
+  //     <NextLink
+  //       href={"/viewPIP?ID="+row.formID}
+  //     > 
+  //       <Button 
+  //         colorScheme="teal"
+  //         bgGradient="linear(to-r, teal.400, teal.500, teal.600)"
+  //         color="white"
+  //         variant="solid"
+  //         loadingText="Logging In"
+  //         size="xs"
+  //         leftIcon={<ViewIcon />}
+  //       >
+  //         View
+  //       </Button>
+  //     </NextLink>
+  //   </>
+  //   ,
+  //   ignoreRowClick: true,
+  //   allowOverflow: true,
+  //   button: true,
+  // },
 ];
 
 function Entries({ entries }) {
@@ -110,7 +110,7 @@ function Entries({ entries }) {
         pointerOnHover
         highlightOnHover
         title="Entries"
-        onRowClicked={(e) => console.log(e)}
+        onRowClicked={(e) => window.open(`/viewPIP?ID=${e.formID}`, "_blank")}
       />
     )
   } else {

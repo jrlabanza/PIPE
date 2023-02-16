@@ -1,9 +1,7 @@
 import Skeleton from 'react-loading-skeleton'
-// import Container from '@/components/container'
 import { Container } from '@chakra-ui/layout'
 import Entries from '../components/entries'
 import BasicStatistics from '../components/statistics'
-// import { useGsenEntries } from '../lib/swr-hooks'
 import { usePIPEntries } from '../lib/swr-hooks'
 import Cookies from 'js-cookie'
 import { useRouter } from 'next/router'
@@ -25,10 +23,12 @@ export default function IndexPage({Component, pageProps}) {
   const {
     entries,
     entryCount,
-    isLoading
+    isLoading,
+    annoucement
   } = usePIPEntries(Cookies.get('ffID'), filter)
   const router = useRouter()
   const id = 'annoucement'
+
   useEffect(() => {
     document.title = "Dashboard"
     var cookieObj = {}
@@ -36,6 +36,21 @@ export default function IndexPage({Component, pageProps}) {
     !cookieObj ? router.push('/login') : ''
   }, [Cookies.get('authorized')])
 
+  useEffect(() => {
+    if(annoucement){
+      if (!toast.isActive(id)) {
+        toast({
+          id,
+          title: annoucement.title,
+          description: annoucement.annoucement,
+          status: annoucement.status,
+          duration: null,
+          isClosable: false,
+          position: 'top'
+        })
+      }
+    }
+  }, [annoucement])
   if (isLoading) {
     return (
       <>
@@ -46,6 +61,21 @@ export default function IndexPage({Component, pageProps}) {
           >
             <GridItem colSpan={{sm: 12, lg: 12}}>
               <Navbar />
+            </GridItem>
+            <GridItem colSpan={{sm: 12, lg: 4}}>
+              <Box
+                mx="auto"
+                borderWidth="1px"
+                borderRadius="lg"
+                borderColor={useColorModeValue('gray.800', 'gray.500')}
+                p={5}
+              >
+                <Stack>
+                  <Skeleton height="86px" />
+                  <Skeleton height="86px" />
+                  <Skeleton height="86px" />
+                </Stack>
+              </Box>
             </GridItem>
             <GridItem colSpan={{sm: 12, lg: 8}}>
               <Box
@@ -60,21 +90,6 @@ export default function IndexPage({Component, pageProps}) {
                   <Skeleton height="33px" width="120px" />
                   <Skeleton height="50px" />
                   <Skeleton height="50px" />
-                </Stack>
-              </Box>
-            </GridItem>
-            <GridItem colSpan={{sm: 12, lg: 4}}>
-              <Box
-                mx="auto"
-                borderWidth="1px"
-                borderRadius="lg"
-                borderColor={useColorModeValue('gray.800', 'gray.500')}
-                p={5}
-              >
-                <Stack>
-                  <Skeleton height="86px" />
-                  <Skeleton height="86px" />
-                  <Skeleton height="86px" />
                 </Stack>
               </Box>
             </GridItem>
@@ -94,8 +109,8 @@ export default function IndexPage({Component, pageProps}) {
         </GridItem>
         <GridItem colSpan={{sm: 12, lg: 2}} >
           <Box
-            borderWidth="1px"
-            borderRadius="lg"
+            // borderWidth="1px"
+            borderRadius="xl"
             boxShadow={'xl'}
             borderColor={useColorModeValue('gray.800', 'gray.500')}
             p={5}
@@ -109,8 +124,8 @@ export default function IndexPage({Component, pageProps}) {
         </GridItem>
         <GridItem colSpan={{sm: 12, lg: 10}} >
           <Box
-            borderWidth="1px"
-            borderRadius="lg"
+            // borderWidth="1px"
+            borderRadius="xl"
             boxShadow={'xl'}
             borderColor={useColorModeValue('gray.800', 'gray.500')}
             p={5}

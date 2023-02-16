@@ -1,15 +1,15 @@
 import { query } from '../../../lib/db'
 
 const handler = async (req, res) => {
-  const { username } = req.body
+  const { dept_code } = req.body
   try {
     const results = await query(
       `
-        SELECT COUNT(*) as is_admin
-        FROM users
-        WHERE ffid = ? AND is_admin = 1
+        SELECT *
+        FROM department_head_list
+        WHERE dept_code = ?
       `,
-      username
+      dept_code
     )
 
     return res.json(results[0])

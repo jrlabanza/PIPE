@@ -8,15 +8,21 @@ export function getPIPData(id){
   return useSWR(`/api/get-pip-data?id=${id}`, fetcher, { refreshInterval: 1000})
 }
 
+export function getAnnoucements(){
+  return useSWR(`/api/get-annoucements`, fetcher, { refreshInterval: 1000} )
+}
+
 export function usePIPEntries(ffid, filter){
   try{
     if (filter == "ALL"){
       const { data, error } = useSWR(`/api/get-pip`, fetcher, { refreshInterval: 1000})
       const { data: getDataCount } = useSWR(`/api/get-pip-data-count?ffid=${ffid}`, fetcher, { refreshInterval: 1000 })
+      const { data: annoucement } = useSWR(`/api/get-annoucements`, fetcher, { refreshInterval: 1000} )
 
       return {
         entries: data,
         entryCount: getDataCount,
+        annoucement: annoucement,
         isLoading: !error && (!data || !getDataCount),
         isError: error
       }
@@ -24,10 +30,12 @@ export function usePIPEntries(ffid, filter){
     else if (filter == "SUBMITTED"){
       const { data, error } = useSWR(`/api/get-pip-submitted?ffid=${ffid}`, fetcher, { refreshInterval: 1000})
       const { data: getDataCount } = useSWR(`/api/get-pip-data-count?ffid=${ffid}`, fetcher, { refreshInterval: 1000 })
+      const { data: annoucement } = useSWR(`/api/get-annoucements`, fetcher, { refreshInterval: 1000} )
 
       return {
         entries: data,
         entryCount: getDataCount,
+        annoucement: annoucement,
         isLoading: !error && (!data || !getDataCount),
         isError: error
       }
@@ -35,10 +43,12 @@ export function usePIPEntries(ffid, filter){
     else if (filter = "ASSIGNED"){
       const { data, error } = useSWR(`/api/get-pip-assigned?ffid=${ffid}`, fetcher, { refreshInterval: 1000})
       const { data: getDataCount } = useSWR(`/api/get-pip-data-count?ffid=${ffid}`, fetcher, { refreshInterval: 1000 })
+      const { data: annoucement } = useSWR(`/api/get-annoucements`, fetcher, { refreshInterval: 1000} )
 
       return {
         entries: data,
         entryCount: getDataCount,
+        annoucement: annoucement,
         isLoading: !error && (!data || !getDataCount),
         isError: error
       }
@@ -46,10 +56,12 @@ export function usePIPEntries(ffid, filter){
     else{
       const { data, error } = useSWR(`/api/get-pip-submitted?ffid=${ffid}`, fetcher, { refreshInterval: 1000})
       const { data: getDataCount } = useSWR(`/api/get-pip-data-count?ffid=${ffid}`, fetcher, { refreshInterval: 1000 })
+      const { data: annoucement } = useSWR(`/api/get-annoucements`, fetcher, { refreshInterval: 1000} )
 
       return {
         entries: data,
         entryCount: getDataCount,
+        annoucement: annoucement,
         isLoading: !error && (!data || !getDataCount),
         isError: error
       }

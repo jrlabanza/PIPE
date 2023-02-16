@@ -78,14 +78,21 @@ export default function ViewForm(
     /*Period Date Controller*/
     const handlePeriod = (event) => {
       event.preventDefault()
+      // console.log(event.target)
+      // console.log("Goal ID",event.target[2].id)// goal id
+      // console.log("PIP ID", event.target[2].getAttribute(`data-pip-id`)) //pip id
+      // console.log("Actual Start", event.target[2].value)//start
+      // console.log("Actual End", event.target[3].value)//end
+      // console.log("Period Query Start", event.target[2].getAttribute(`data-query`))
+      // console.log("Period Query End", event.target[3].getAttribute(`data-query`))
+      // console.log("Period", event.target[4].id)
+      // console.log("Remarks", event.target[5].value)
+      const formData = new FormData(event.currentTarget)
       if(confirm("Confirm Action?")){
         setButtonControl(true)
         setToastMessage(["Saving Changes", "", "info"])
-        const formData = new FormData(event.currentTarget)
-        formData.append('id', event.currentTarget[0].id)
-        formData.append('queryString', event.currentTarget[0].getAttribute('data-query'))
-        formData.append('forMail', event.currentTarget[0].getAttribute('data-for-mail'))
-        formData.append('pipID', event.currentTarget[0].getAttribute('data-pip-id'))
+        formData.append('id', event.target[2].id)
+        formData.append('pipID', event.target[4].getAttribute(`data-pip-id`))
         axios({
           method: 'POST',
           url: '/api/form/update-period',
@@ -93,10 +100,18 @@ export default function ViewForm(
             'Accept': 'application/json',
             'Content-Type': 'application/json' 
           },
-          data: convertFD2JSON(formData)
+          data: {
+            startDate: event.target[2].value,
+            endDate: event.target[3].value,
+            id: event.target[2].getAttribute(`data-pip-id`),
+            startQuery: event.target[2].getAttribute(`data-query`),
+            endQuery: event.target[3].getAttribute(`data-query`),
+            remarks: event.target[5].value,
+            period: event.target[4].id,
+            goalID: event.target[2].id
+          }
         })
         .then((response) => {
-          console.log(response)
           setButtonControl(false)
           setToastMessage(["Saved Successful", response.message, "success"])
         })
@@ -105,6 +120,35 @@ export default function ViewForm(
           setToastMessage(["Error", err.message, "error"])
         })
       }
+
+      axios({
+        method:'post',
+        url: '/api/upload-file',
+        headers: { 
+          'Accept': 'application/json',
+          'Content-Type': 'application/json' 
+        },
+        data: formData
+      })
+      .then(async response => {
+        const uploadDBres = await axios({
+          method:'post',
+          url: '/api/upload-file/save-to-db',
+          headers: { 
+            'Accept': 'application/json',
+            'Content-Type': 'application/json' 
+          },
+          data:{
+            "file": response.data.file,
+            "pip_id": event.target[4].getAttribute(`data-pip-id`),
+            "goal_id": event.target[2].id,
+            "period": event.target[4].id,
+            "isSummary": 0,
+          }
+        })
+        setButtonControl(false)
+        setToastMessage(["Upload Successful", "", "success"])
+      })
     }
 
     /*Approval Controller*/
@@ -229,9 +273,6 @@ export default function ViewForm(
         const formData = new FormData(event.currentTarget)
         formData.append("id", pipData.id)
         formData.append("current_status", "FINAL REVIEW")
-        for (var pair of formData.entries()) {
-          console.log(pair[0]+ ', ' + pair[1])
-        }
         setButtonControl(true)
         setToastMessage(["Saving Changes", "", "info"])
         axios({
@@ -278,7 +319,6 @@ export default function ViewForm(
         })
         .then((response) => {
           setButtonControl(false)
-          console.log(response.data.id)
           setToastMessage(["Saved Successful", response.data.message, "success"])
           axios({
             method: 'POST',
@@ -396,7 +436,6 @@ export default function ViewForm(
           boxShadow={'xl'}
           mb={4}
           borderColor={useColorModeValue('gray.800', 'gray.500')}
-          borderWidth={'1px'}
         >
           <HStack className="row" w={"100%"}>
             <Heading fontSize="4xl" fontWeight="0px">Performance Improvement Plan</Heading>
@@ -447,14 +486,6 @@ export default function ViewForm(
                 <Text>Originator:</Text>
                 <Text as={'b'}>{pipData.originator}</Text>
               </HStack>
-              {/* <Grid templateColumns='repeat(2, 1fr)' gap={6}>
-                <GridItem>
-                  Status
-                </GridItem>
-                <GridItem>
-                  {pipData.current_status}
-                </GridItem>
-              </Grid> */}
             </GridItem>
           </Grid>
           <div hidden={
@@ -520,7 +551,6 @@ export default function ViewForm(
           boxShadow={'xl'}
           mb={4}
           borderColor={useColorModeValue('gray.800', 'gray.500')}
-          borderWidth={'1px'}
         >
             <Grid
               h='auto'
@@ -559,9 +589,7 @@ export default function ViewForm(
                           }
                         }
                       }
-                      
-                      // var defaultAccordion = [0,1,2]
-                      console.log(resFirstPeriodAttachment)
+                      // console.log(Date(pipGoals[i].first_period_actual_end).toLocaleDateString('en-CA'))
                       rows.push(
                         <TabPanel key={i}>
                           <FormLabel fontSize='xl'>
@@ -620,186 +648,161 @@ export default function ViewForm(
                                   </Box>
                                   <AccordionIcon />
                                 </AccordionButton>
-                                {/* <Progress size='xs' isIndeterminate colorScheme={'pink'}/> */}
                               </h2>
                               <AccordionPanel 
                                 pb={4} 
-                                //borderColor={useColorModeValue('gray.800', 'gray.500')}
-                                //borderWidth={'1px'}
+                                
                               >
-                                <Grid
-                                  templateColumns='repeat(8, 1fr)'
-                                  gap={4}
-                                  px={4}
-                                  pt={3}
-                                >
-                                  <GridItem colSpan={2}>
-                                    <FormLabel fontSize='md'>Expected Start</FormLabel>
-                                    <FormControl variant='floating' id='requestType' mt={2}>
-                                      <Input className={"first_expected_start_date"} mt={4} type="text" defaultValue={new Date(pipGoals[i].first_period_expected_start).toLocaleDateString()} readOnly/>
-                                      <FormLabel>1st Period</FormLabel>
-                                    </FormControl>
-                                  </GridItem>
-                                  <GridItem colSpan={2}>
-                                    <FormLabel fontSize='md'>Expected End</FormLabel>
-                                    <FormControl variant='floating' id='requestType' mt={2}>
-                                      <Input className={"first_expected_end_date"} mt={4} type="text" defaultValue={new Date(pipGoals[i].first_period_expected_end).toLocaleDateString()} readOnly/>
-                                      <FormLabel>1st Period</FormLabel>
-                                    </FormControl>
-                                  </GridItem>
-                                  <GridItem colSpan={2}>
-                                    <FormLabel fontSize='md'>Actual Start</FormLabel>
-                                    <form onSubmit={handlePeriod} onKeyPress={(e) => { e.key === 'Enter' && e.preventDefault()}}>
-                                      <FormControl variant='floating' id='requestType' mt={2} isRequired>
-                                        <Input 
-                                          name={"date"} 
-                                          data-query={'first_period_actual_start'} 
-                                          data-pip-id={pipData.id}
-                                          id={pipGoals[i].id} 
-                                          mt={4} 
-                                          type="date" 
-                                          defaultValue={pipGoals[i].first_period_actual_start ? new Date(pipGoals[i].first_period_actual_start).toLocaleDateString('en-CA') : null} 
-                                          readOnly={userData.ffID == pipData.originator_ffid ? false : true}
-                                          data-for-mail={false}
-                                        />
-                                        <FormLabel>1st Period</FormLabel>
-                                        <InputRightElement width='4.5rem' mt={5}>
-                                          <IconButton 
-                                            colorScheme={'green'} 
-                                            ml={6} 
-                                            size={'sm'} 
-                                            icon={<EditIcon />}
-                                            type="submit"
-                                            isDisabled={buttonControl}
-                                            title="UPDATE DATE"
-                                            hidden={userData.ffID == pipData.originator_ffid ? false : true}
-                                          />
-                                        </InputRightElement>
-                                      </FormControl>
-                                    </form>
-                                  </GridItem>
-                                  <GridItem colSpan={2}>
-                                    <FormLabel fontSize='md'>Actual End</FormLabel>
-                                    <form onSubmit={handlePeriod} onKeyPress={(e) => { e.key === 'Enter' && e.preventDefault()}}>
-                                      <FormControl variant='floating' id='requestType' mt={2} isRequired>
-                                        <Input 
-                                          name={"date"}
-                                          data-query={'first_period_actual_end'} 
-                                          data-pip-id={pipData.id}
-                                          id={pipGoals[i].id} 
-                                          mt={4} 
-                                          type="date" 
-                                          defaultValue={pipGoals[i].first_period_actual_end ? new Date(pipGoals[i].first_period_actual_end).toLocaleDateString('en-CA'): null} 
-                                          readOnly={userData.ffID == pipData.originator_ffid ? false : true}
-                                          data-for-mail={true}
-                                        />
-                                        <FormLabel>1st Period</FormLabel>
-                                        <InputRightElement width='4.5rem' mt={5}>
-                                          <IconButton 
-                                            colorScheme={'green'} 
-                                            ml={6} 
-                                            size={'sm'} 
-                                            icon={<EditIcon />}
-                                            type="submit"
-                                            isDisabled={buttonControl}
-                                            title="UPDATE DATE"
-                                            hidden={userData.ffID == pipData.originator_ffid ? false : true}
-                                          />
-                                        </InputRightElement>
-                                      </FormControl>
-                                    </form>
-                                  </GridItem>
-                                </Grid>
-                                <div 
-                                  hidden={(pipGoals[i].first_period_actual_start && pipGoals[i].first_period_actual_end) ? false : true}
-                                >
+                                <form onSubmit={handlePeriod} onKeyPress={(e) => { e.key === 'Enter' && e.preventDefault()}}>
                                   <Grid
                                     templateColumns='repeat(8, 1fr)'
                                     gap={4}
                                     px={4}
                                     pt={3}
                                   >
-                                    <GridItem colSpan={4}>
-                                      <FormLabel fontSize='md'>Supervisor Remarks</FormLabel>
-                                      <form onSubmit={handleFileUpload} onKeyPress={(e) => { e.key === 'Enter' && e.preventDefault()}}>
-                                        <FormControl variant='floating' id='requestType' mt={2} isRequired>
+                                    <GridItem colSpan={2}>
+                                      <FormLabel fontSize='md'>Expected Start</FormLabel>
+                                      <FormControl variant='floating' id='requestType' mt={2}>
+                                        <Input className={"first_expected_start_date"} mt={4} type="text" defaultValue={new Date(pipGoals[i].first_period_expected_start).toLocaleDateString()} readOnly/>
+                                        <FormLabel>1st Period</FormLabel>
+                                      </FormControl>
+                                    </GridItem>
+                                    <GridItem colSpan={2}>
+                                      <FormLabel fontSize='md'>Expected End</FormLabel>
+                                      <FormControl variant='floating' id='requestType' mt={2}>
+                                        <Input className={"first_expected_end_date"} mt={4} type="text" defaultValue={new Date(pipGoals[i].first_period_expected_end).toLocaleDateString()} readOnly/>
+                                        <FormLabel>1st Period</FormLabel>
+                                      </FormControl>
+                                    </GridItem>
+                                    <GridItem colSpan={2}>
+                                      <FormLabel fontSize='md'>Actual Start</FormLabel>
+                                        <FormControl variant='floating' id='requestType' mt={2}>
                                           <Input 
-                                            name={"file"}
-                                            data-query={'first_period_actual_end'} 
-                                            data-pip-id={pipGoals[i].pip_id}
-                                            data-goal-id={pipGoals[i].id}
-                                            data-is-summary={0}
-                                            id={1} 
-                                            mt={4} 
-                                            type="file"
-                                            multiple 
-                                            //readOnly={userData.ffID == pipData.originator_ffid ? false : true}
-                                          />
-                                          <FormLabel>Attach Evidence</FormLabel>
-                                        </FormControl>
-                                        <FormControl variant='floating' id='requestType' mt={2} >
-                                          <Textarea 
-                                            name={"supervisor_remarks"}
-                                            data-query={'first_period_remarks'} 
+                                            name={"date"} 
+                                            data-query={'first_period_actual_start'} 
+                                            data-pip-id={pipData.id}
                                             id={pipGoals[i].id} 
                                             mt={4} 
-                                            type="text"
-                                            //readOnly={userData.ffID == pipData.originator_ffid ? false : true}
-                                          >
-                                          </Textarea>
-                                          <FormLabel>Remarks</FormLabel>
+                                            type="date" 
+                                            defaultValue={pipGoals[i].first_period_actual_start ? new Date(pipGoals[i].first_period_actual_start).toISOString().substring(0, 10) : null} 
+                                            readOnly={userData.ffID == pipData.originator_ffid ? false : true}
+                                            data-for-mail={false}
+                                          />
+                                          <FormLabel>1st Period</FormLabel>
                                         </FormControl>
-                                        <Button 
-                                          colorScheme={'green'}
-                                          type={"submit"}
-                                          mt={4}
-                                          isDisabled={buttonControl}
-                                        >
-                                            Submit
-                                        </Button>
-                                      </form>
                                     </GridItem>
-                                    <GridItem 
-                                      colSpan={4} 
-                                      borderColor={'900.grey'}
-                                      borderWidth={'1px'}
-                                      maxWidth={"460px"}
-                                    >
-                                      <Grid
-                                        // templateRows='repeat(2, 1fr)'
-                                        // templateColumns='repeat(3, 1fr)'
-                                        // gap={4}
-                                        margin={2}
-                                        gap={2}
-                                      >
-                                        {resFirstPeriodAttachment?.map((uploads) => (
-                                          <GridItem colSpan={1}>
-                                            <Tag
-                                              size={'sm'}
-                                              key={'sm'}
-                                              borderRadius='full'
-                                              variant='solid'
-                                              colorScheme='green'
-                                              style={{"word-wrap": "break-word"}}
-                                              maxWidth={"300px"}
-                                            >
-                                              <TagLabel title={'test.png'}>{uploads.uploadName}</TagLabel>
-                                              <a href={`/uploads/`+uploads.uploadName} download>
-                                                <IconButton 
-                                                  icon={<DownloadIcon />} 
-                                                  size={'xs'} 
-                                                  colorScheme={'green'} 
-                                                />
-                                              </a>
-                                            </Tag>
-                                          </GridItem>
-
-                                        ))}
-                                      </Grid>
+                                    <GridItem colSpan={2}>
+                                      <FormLabel fontSize='md'>Actual End</FormLabel>
+                                        <FormControl variant='floating' id='requestType' mt={2}>
+                                          <Input 
+                                            name={"date"}
+                                            data-query={'first_period_actual_end'} 
+                                            data-pip-id={pipData.id}
+                                            id={pipGoals[i].id} 
+                                            mt={4} 
+                                            type="date" 
+                                            defaultValue={pipGoals[i].first_period_actual_end ? new Date(pipGoals[i].first_period_actual_end).toISOString().substring(0, 10): null} 
+                                            readOnly={userData.ffID == pipData.originator_ffid ? false : true}
+                                            data-for-mail={true}
+                                          />
+                                          <FormLabel>1st Period</FormLabel>
+                                        </FormControl>
                                     </GridItem>
                                   </Grid>
-                                </div>
-                                
+                                  <div
+                                    hidden={userData.ffID == pipData.originator_ffid ? false : true} 
+                                  >
+                                    <Box
+                                      borderRadius='lg' 
+                                      overflow='hidden'
+                                      borderWidth='1px'
+                                      m={4}
+                                      p={5}
+                                    >
+                                      <Grid
+                                        templateColumns='repeat(8, 1fr)'
+                                        gap={4}
+                                        px={4}
+                                      >
+                                        <GridItem colSpan={4}>
+                                          <FormLabel fontSize='md'>Supervisor Remarks</FormLabel>
+                                            <FormControl variant='floating' id='requestType' mt={2}>
+                                              <Input 
+                                                name={"file"}
+                                                data-pip-id={pipGoals[i].pip_id}
+                                                data-goal-id={pipGoals[i].id}
+                                                data-is-summary={0}
+                                                id={1} 
+                                                mt={4} 
+                                                type="file"
+                                                multiple 
+                                              />
+                                              <FormLabel>Attach Evidence</FormLabel>
+                                            </FormControl>
+                                            <FormControl variant='floating' id='requestType' mt={2} >
+                                              <Textarea 
+                                                name={"supervisor_remarks"}
+                                                data-query={'first_period_remarks'} 
+                                                id={pipGoals[i].id} 
+                                                mt={4} 
+                                                type="text"
+                                              >
+                                              </Textarea>
+                                              <FormLabel>Remarks</FormLabel>
+                                            </FormControl>
+                                        </GridItem>
+                                        <GridItem 
+                                          colSpan={4} 
+                                          borderColor={'900.grey'}
+                                          borderWidth={'1px'}
+                                          maxWidth={"460px"}
+                                        >
+                                          <Grid
+                                            margin={2}
+                                            gap={2}
+                                          >
+                                            {resFirstPeriodAttachment?.map((uploads, i) => (
+                                              <GridItem colSpan={1} key={i}>
+                                                <Tag
+                                                  size={'sm'}
+                                                  key={'sm'}
+                                                  borderRadius='full'
+                                                  variant='solid'
+                                                  colorScheme='green'
+                                                  style={{"wordWrap": "break-word"}}
+                                                  maxWidth={"300px"}
+                                                >
+                                                  <TagLabel title={'test.png'}>{uploads.uploadName}</TagLabel>
+                                                  <a 
+                                                    href={(window.location.origin).substring(0,(window.location.origin).length - 5)+`:`+process.env.NEXT_PUBLIC_DOWNLOAD_PORT+`/`+uploads.uploadName} 
+                                                    target="_blank"
+                                                  >
+                                                    <IconButton 
+                                                      icon={<DownloadIcon />} 
+                                                      size={'xs'} 
+                                                      colorScheme={'green'} 
+                                                    />
+                                                  </a>
+                                                </Tag>
+                                              </GridItem>
+
+                                            ))}
+                                          </Grid>
+                                        </GridItem>
+                                      </Grid>
+                                    </Box>
+                                  </div>
+                                  <Button 
+                                    colorScheme={'green'}
+                                    type={"submit"}
+                                    mt={4}
+                                    isDisabled={buttonControl}
+                                    hidden={userData.ffID == pipData.originator_ffid ? false : true}
+                                  >
+                                      Update First Period
+                                  </Button>
+                                </form>
+                                {/*  */}
                                 <Checkbox 
                                   mt={5}
                                   id={pipGoals[i].id}  
@@ -831,8 +834,8 @@ export default function ViewForm(
                                             </Tr>
                                           </Thead>
                                           <Tbody>
-                                            {resFirstPeriod?.map(item => (
-                                              <Tr>
+                                            {resFirstPeriod?.map((item, i) => (
+                                              <Tr key={i}>
                                                 <Td style={{"whiteSpace": "pre-wrap"}}>{item.task}</Td>
                                                 <Td>{new Date(item.start_date).toLocaleDateString()}</Td>
                                                 <Td>{new Date(item.end_date).toLocaleDateString()}</Td>
@@ -941,10 +944,10 @@ export default function ViewForm(
                                                     </Box>
                                                     <Box>
                                                       <IconButton 
-                                                        title='APPROVED' 
+                                                        title='ACKNOWLEDGED' 
                                                         colorScheme={'green'} 
                                                         icon={<CheckIcon />} 
-                                                        onClick={() => {setSignoffStatus('APPROVED')}} 
+                                                        onClick={() => {setSignoffStatus('ACKNOWLEDGED')}} 
                                                         type="submit"
                                                         isDisabled={buttonControl}
                                                       />
@@ -957,27 +960,6 @@ export default function ViewForm(
                                           }      
                                           </Td>
                                         </Tr>
-                                        {/* <Tr>
-                                          <Td>Supervisor</Td>
-                                          <Td style={{"whiteSpace": "pre-wrap"}}>{pipData.originator}</Td>
-                                          <Td>{pipGoals[i].first_period_supervisor}</Td>
-                                          <Td>{pipData.date_submitted}</Td>
-                                          <Td style={{"whiteSpace": "pre-wrap"}}>
-                                            <HStack>
-                                              <Box>
-                                                <Input
-                                                  name={'first_period_employee_approval_remarks'} 
-                                                  size={"sm"}
-                                                  defaultValue={pipGoals[i].first_period_employee_approval_remarks}
-                                                />
-                                              </Box>
-                                              <Box>
-                                                <IconButton colorScheme={'green'} icon={<CheckIcon />} onClick={(event) => handleApproval(event)} value={"APROVED"}/>
-                                                <IconButton colorScheme={'red'} icon={<CloseIcon />}/>
-                                              </Box>
-                                            </HStack>
-                                          </Td>
-                                        </Tr> */}
                                         <Tr>
                                           <Td>Department Manager</Td>
                                           <Td style={{"whiteSpace": "pre-wrap"}}>{pipData.department_head_name}</Td>
@@ -1003,10 +985,10 @@ export default function ViewForm(
                                                     </Box>
                                                     <Box>
                                                       <IconButton 
-                                                        title='APPROVED' 
+                                                        title='ACKNOWLEDGED' 
                                                         colorScheme={'green'} 
                                                         icon={<CheckIcon />} 
-                                                        onClick={() => {setSignoffStatus('APPROVED')}} 
+                                                        onClick={() => {setSignoffStatus('ACKNOWLEDGED')}} 
                                                         type="submit"
                                                         isDisabled={buttonControl}
                                                       />
@@ -1041,7 +1023,8 @@ export default function ViewForm(
                               <AccordionPanel 
                                 pb={4} 
                               >
-                              <Grid
+                              <form onSubmit={handlePeriod} onKeyPress={(e) => { e.key === 'Enter' && e.preventDefault()}}>
+                                <Grid
                                   templateColumns='repeat(8, 1fr)'
                                   gap={4}
                                   px={4}
@@ -1063,8 +1046,7 @@ export default function ViewForm(
                                   </GridItem>
                                   <GridItem colSpan={2}>
                                     <FormLabel fontSize='md'>Actual Start</FormLabel>
-                                    <form onSubmit={handlePeriod} onKeyPress={(e) => { e.key === 'Enter' && e.preventDefault()}}>
-                                      <FormControl variant='floating' id='requestType' mt={2} isRequired>
+                                      <FormControl variant='floating' id='requestType' mt={2}>
                                         <Input 
                                           name={"date"}
                                           data-query={'second_period_actual_start'} 
@@ -1072,29 +1054,16 @@ export default function ViewForm(
                                           id={pipGoals[i].id} 
                                           mt={4} 
                                           type="date" 
-                                          defaultValue={pipGoals[i].second_period_actual_start ? new Date(pipGoals[i].second_period_actual_start).toLocaleDateString('en-CA') : null}
+                                          defaultValue={pipGoals[i].second_period_actual_start ? new Date(pipGoals[i].second_period_actual_start).toISOString().substring(0, 10) : null}
                                           readOnly={userData.ffID == pipData.originator_ffid ? false : true} 
                                           data-for-mail={false}
                                         />
                                         <FormLabel>2nd Period</FormLabel>
-                                        <InputRightElement width='4.5rem' mt={5}>
-                                          <IconButton 
-                                            colorScheme={'green'} 
-                                            ml={6} 
-                                            size={'sm'} 
-                                            icon={<EditIcon />}
-                                            type="submit"
-                                            isDisabled={buttonControl}
-                                            hidden={userData.ffID == pipData.originator_ffid ? false : true}
-                                          />
-                                        </InputRightElement>
                                       </FormControl>
-                                    </form>
                                   </GridItem>
                                   <GridItem colSpan={2}>
                                     <FormLabel fontSize='md'>Actual End</FormLabel>
-                                    <form onSubmit={handlePeriod} onKeyPress={(e) => { e.key === 'Enter' && e.preventDefault()}}>
-                                      <FormControl variant='floating' id='requestType' mt={2} isRequired>
+                                      <FormControl variant='floating' id='requestType' mt={2}>
                                         <Input 
                                           name={"date"}
                                           data-query={'second_period_actual_end'} 
@@ -1102,112 +1071,109 @@ export default function ViewForm(
                                           id={pipGoals[i].id} 
                                           mt={4} 
                                           type="date" 
-                                          defaultValue={pipGoals[i].second_period_actual_end ? new Date(pipGoals[i].second_period_actual_end).toLocaleDateString('en-CA') : null}
+                                          defaultValue={pipGoals[i].second_period_actual_end ? new Date(pipGoals[i].second_period_actual_end).toISOString().substring(0, 10) : null}
                                           readOnly={userData.ffID == pipData.originator_ffid ? false : true} 
                                           data-for-mail={true}
                                         />
                                         <FormLabel>2nd Period</FormLabel>
-                                        <InputRightElement width='4.5rem' mt={5}>
-                                          <IconButton 
-                                            colorScheme={'green'} 
-                                            ml={6} 
-                                            size={'sm'} 
-                                            icon={<EditIcon />}
-                                            type="submit"
-                                            isDisabled={buttonControl}
-                                            hidden={userData.ffID == pipData.originator_ffid ? false : true}
-                                          />
-                                        </InputRightElement>
                                       </FormControl>
-                                    </form>
                                   </GridItem>
                                 </Grid>
-                                <div hidden={(pipGoals[i].second_period_actual_start && pipGoals[i].second_period_actual_end) ? false : true}>
-                                  <Grid
-                                    templateColumns='repeat(8, 1fr)'
-                                    gap={4}
-                                    px={4}
-                                    pt={3}
+                                <div 
+                                  hidden={userData.ffID == pipData.originator_ffid ? false : true}
+                                >
+                                  <Box
+                                    borderRadius='lg' 
+                                    overflow='hidden'
+                                    borderWidth='1px'
+                                    m={4}
+                                    p={5}
                                   >
-                                    <GridItem colSpan={4}>
-                                      <FormLabel fontSize='md'>Supervisor Remarks</FormLabel>
-                                      <form onSubmit={handleFileUpload} onKeyPress={(e) => { e.key === 'Enter' && e.preventDefault()}}>
-                                        <FormControl variant='floating' id='requestType' mt={2} isRequired>
-                                          <Input 
-                                            name={"file"}
-                                            data-query={'first_period_actual_end'} 
-                                            data-pip-id={pipGoals[i].pip_id}
-                                            data-goal-id={pipGoals[i].id}
-                                            data-is-summary={0}
-                                            id={2} 
-                                            mt={4} 
-                                            type="file"
-                                            multiple 
-                                            //readOnly={userData.ffID == pipData.originator_ffid ? false : true}
-                                          />
-                                          <FormLabel>Attach Evidence</FormLabel>
-                                        </FormControl>
-                                        <FormControl variant='floating' id='requestType' mt={2}>
-                                          <Textarea 
-                                            name={"supervisor_remarks"}
-                                            data-query={'second_period_remarks'} 
-                                            id={pipGoals[i].id} 
-                                            mt={4} 
-                                            type="text"
-                                            //readOnly={userData.ffID == pipData.originator_ffid ? false : true}
-                                          >
-                                          </Textarea>
-                                          <FormLabel>Remarks</FormLabel>
-                                        </FormControl>
-                                        <Button 
-                                          colorScheme={'green'} 
-                                          type={"submit"} 
-                                          mt={4}
-                                          isDisabled={buttonControl}
-                                        >
-                                          Submit
-                                        </Button>
-                                      </form>
-                                    </GridItem>
-                                    <GridItem colSpan={4} 
-                                      borderColor={'900.grey'}
-                                      borderWidth={'1px'}
-                                      maxWidth={"460px"}
+                                    <Grid
+                                      templateColumns='repeat(8, 1fr)'
+                                      gap={4}
+                                      px={4}
                                     >
-                                      <Grid
-                                        // templateRows='repeat(2, 1fr)'
-                                        // templateColumns='repeat(3, 1fr)'
-                                        // gap={4}
-                                        margin={2}
-                                        gap={2}
-                                      >
-                                        {resSecondPeriodAttachment?.map((uploads) => (
-                                          <GridItem colSpan={1}>
-                                            <Tag
-                                              size={'sm'}
-                                              key={'sm'}
-                                              borderRadius='full'
-                                              variant='solid'
-                                              colorScheme='green'
-                                              style={{"word-wrap": "break-word"}}
-                                              maxWidth={"300px"}
+                                      <GridItem colSpan={4}>
+                                        <FormLabel fontSize='md'>Supervisor Remarks</FormLabel>
+                                          <FormControl variant='floating' id='requestType' mt={2}>
+                                            <Input 
+                                              name={"file"}
+                                              data-query={'first_period_actual_end'} 
+                                              data-pip-id={pipGoals[i].pip_id}
+                                              data-goal-id={pipGoals[i].id}
+                                              data-is-summary={0}
+                                              id={2} 
+                                              mt={4} 
+                                              type="file"
+                                              multiple 
+                                            />
+                                            <FormLabel>Attach Evidence</FormLabel>
+                                          </FormControl>
+                                          <FormControl variant='floating' id='requestType' mt={2}>
+                                            <Textarea 
+                                              name={"supervisor_remarks"}
+                                              data-query={'second_period_remarks'} 
+                                              id={pipGoals[i].id} 
+                                              mt={4} 
+                                              type="text"
                                             >
-                                              <TagLabel>{uploads.uploadName}</TagLabel>
-                                              <a href={`/uploads/`+uploads.uploadName} download>
-                                                <IconButton 
-                                                  icon={<DownloadIcon />} 
-                                                  size={'xs'} 
-                                                  colorScheme={'green'} 
-                                                />
-                                              </a>
-                                            </Tag>
-                                          </GridItem>
+                                            </Textarea>
+                                            <FormLabel>Remarks</FormLabel>
+                                          </FormControl>
+                                          
+                                      </GridItem>
+                                      <GridItem colSpan={4} 
+                                        borderColor={'900.grey'}
+                                        borderWidth={'1px'}
+                                        maxWidth={"460px"}
+                                      >
+                                        <Grid
+                                          margin={2}
+                                          gap={2}
+                                        >
+                                          {resSecondPeriodAttachment?.map((uploads, i) => (
+                                            <GridItem colSpan={1} key={i}>
+                                              <Tag
+                                                size={'sm'}
+                                                key={'sm'}
+                                                borderRadius='full'
+                                                variant='solid'
+                                                colorScheme='green'
+                                                style={{"wordWrap": "break-word"}}
+                                                maxWidth={"300px"}
+                                              >
+                                                <TagLabel>{uploads.uploadName}</TagLabel>
+                                                <a 
+                                                  href={(window.location.origin).substring(0,(window.location.origin).length - 5)+`:`+process.env.NEXT_PUBLIC_DOWNLOAD_PORT+`/`+uploads.uploadName} 
+                                                  target="_blank"
+                                                >
+                                                  <IconButton 
+                                                    icon={<DownloadIcon />} 
+                                                    size={'xs'} 
+                                                    colorScheme={'green'} 
+                                                  />
+                                                </a>
+                                              </Tag>
+                                            </GridItem>
 
-                                        ))}
-                                      </Grid>
-                                    </GridItem>
-                                  </Grid>          
+                                          ))}
+                                        </Grid>
+                                      </GridItem>
+                                    </Grid>          
+                                  </Box>
                                 </div>
+                                <Button 
+                                  colorScheme={'green'} 
+                                  type={"submit"} 
+                                  mt={4}
+                                  isDisabled={buttonControl}
+                                  hidden={userData.ffID == pipData.originator_ffid ? false : true}
+                                >
+                                  Update Second Period
+                                </Button>
+                              </form>
+
                                 <Checkbox 
                                   mt={5}
                                   id={pipGoals[i].id} 
@@ -1239,8 +1205,8 @@ export default function ViewForm(
                                             </Tr>
                                           </Thead>
                                           <Tbody>
-                                            {resSecondPeriod?.map(item => (
-                                              <Tr>
+                                            {resSecondPeriod?.map((item, i) => (
+                                              <Tr key={i}>
                                                 <Td style={{"whiteSpace": "pre-wrap"}}>{item.task}</Td>
                                                 <Td>{new Date(item.start_date).toLocaleDateString()}</Td>
                                                 <Td>{new Date(item.end_date).toLocaleDateString()}</Td>
@@ -1262,29 +1228,6 @@ export default function ViewForm(
                                                 </Td>
                                               </Tr>
                                             ))}
-                                            {/* <Tr>
-                                              <Td style={{"whiteSpace": "pre-wrap"}}><Input/></Td>
-                                              <Td><Input type="date"/></Td>
-                                              <Td><Input type="date"/></Td>
-                                              <Td style={{"whiteSpace": "pre-wrap"}}>
-                                                <form onSubmit={addCAPA} onKeyPress={(e) => { e.key === 'Enter' && e.preventDefault()}}>
-                                                  <HStack>
-                                                    <Box>
-                                                      <IconButton 
-                                                        title='Add CAPA' 
-                                                        colorScheme={'green'} 
-                                                        icon={<AddIcon />} 
-                                                        data-pip-id={pipGoals[i].pip_id}
-                                                        data-goal-id={pipGoals[i].id}
-                                                        id={2}
-                                                        type="submit"
-                                                        isDisabled={buttonControl}
-                                                      />
-                                                    </Box>
-                                                  </HStack>
-                                                </form>
-                                              </Td>
-                                            </Tr> */}
                                           </Tbody>
                                         </Table>
                                     </TableContainer>
@@ -1370,10 +1313,10 @@ export default function ViewForm(
                                                     </Box>
                                                     <Box>
                                                       <IconButton 
-                                                        title='APPROVED' 
+                                                        title='ACKNOWLEDGED' 
                                                         colorScheme={'green'} 
                                                         icon={<CheckIcon />} 
-                                                        onClick={() => {setSignoffStatus('APPROVED')}} 
+                                                        onClick={() => {setSignoffStatus('ACKNOWLEDGED')}} 
                                                         type="submit"
                                                         isDisabled={buttonControl}
                                                       />
@@ -1386,27 +1329,6 @@ export default function ViewForm(
                                           } 
                                           </Td>
                                         </Tr>
-                                        {/* <Tr>
-                                          <Td>Supervisor</Td>
-                                          <Td style={{"whiteSpace": "pre-wrap"}}>{pipData.originator}</Td>
-                                          <Td>{pipGoals[i].first_period_supervisor}</Td>
-                                          <Td>{pipData.date_submitted}</Td>
-                                          <Td style={{"whiteSpace": "pre-wrap"}}>
-                                            <HStack>
-                                              <Box>
-                                                <Input
-                                                  name={'first_period_employee_approval_remarks'} 
-                                                  size={"sm"}
-                                                  defaultValue={pipGoals[i].first_period_employee_approval_remarks}
-                                                />
-                                              </Box>
-                                              <Box>
-                                                <IconButton colorScheme={'green'} icon={<CheckIcon />} onClick={(event) => handleApproval(event)} value={"APROVED"}/>
-                                                <IconButton colorScheme={'red'} icon={<CloseIcon />}/>
-                                              </Box>
-                                            </HStack>
-                                          </Td>
-                                        </Tr> */}
                                         <Tr>
                                           <Td>Department Manager</Td>
                                           <Td style={{"whiteSpace": "pre-wrap"}}>{pipData.department_head_name}</Td>
@@ -1432,21 +1354,13 @@ export default function ViewForm(
                                                   </Box>
                                                   <Box>
                                                     <IconButton 
-                                                      title='APPROVED' 
+                                                      title='ACKNOWLEDGED' 
                                                       colorScheme={'green'} 
                                                       icon={<CheckIcon />} 
-                                                      onClick={() => {setSignoffStatus('APPROVED')}} 
+                                                      onClick={() => {setSignoffStatus('ACKNOWLEDGED')}} 
                                                       type="submit"
                                                       isDisabled={buttonControl}
                                                     />
-                                                    {/* <IconButton 
-                                                      title='DECLINED' 
-                                                      colorScheme={'red'} 
-                                                      icon={<CloseIcon />} 
-                                                      onClick={() => {setSignoffStatus('DECLINED')}} 
-                                                      type="submit"
-                                                      isDisabled={buttonControl}
-                                                    /> */}
                                                   </Box>
                                                 </HStack>
                                               </form>
@@ -1477,10 +1391,9 @@ export default function ViewForm(
                               </h2>
                               <AccordionPanel 
                                 pb={4}
-                                // borderColor={useColorModeValue('gray.800', 'gray.500')}
-                                // borderWidth={'1px'}
                               >
-                              <Grid
+                              <form onSubmit={handlePeriod} onKeyPress={(e) => { e.key === 'Enter' && e.preventDefault()}}>
+                                <Grid
                                   templateColumns='repeat(8, 1fr)'
                                   gap={4}
                                   px={4}
@@ -1502,8 +1415,7 @@ export default function ViewForm(
                                   </GridItem>
                                   <GridItem colSpan={2}>
                                     <FormLabel fontSize='md'>Actual Start</FormLabel>
-                                    <form onSubmit={handlePeriod} onKeyPress={(e) => { e.key === 'Enter' && e.preventDefault()}}>
-                                      <FormControl variant='floating' id='requestType' mt={2} isRequired>
+                                      <FormControl variant='floating' id='requestType' mt={2}>
                                         <Input 
                                           name={"date"}
                                           data-query={'third_period_actual_start'} 
@@ -1511,29 +1423,16 @@ export default function ViewForm(
                                           id={pipGoals[i].id} 
                                           mt={4} 
                                           type="date" 
-                                          defaultValue={pipGoals[i].third_period_actual_start ? new Date(pipGoals[i].third_period_actual_start).toLocaleDateString('en-CA') : null}
+                                          defaultValue={pipGoals[i].third_period_actual_start ? new Date(pipGoals[i].third_period_actual_start).toISOString().substring(0, 10) : null}
                                           readOnly={userData.ffID == pipData.originator_ffid ? false : true} 
                                           data-for-mail={false}
                                         />
                                         <FormLabel>3rd Period</FormLabel>
-                                        <InputRightElement width='4.5rem' mt={5}>
-                                          <IconButton 
-                                            colorScheme={'green'} 
-                                            ml={6} 
-                                            size={'sm'} 
-                                            icon={<EditIcon />}
-                                            type="submit"
-                                            isDisabled={buttonControl}
-                                            hidden={userData.ffID == pipData.originator_ffid ? false : true}
-                                          />
-                                        </InputRightElement>
                                       </FormControl>
-                                    </form>
                                   </GridItem>
                                   <GridItem colSpan={2}>
                                     <FormLabel fontSize='md'>Actual End</FormLabel>
-                                    <form onSubmit={handlePeriod} onKeyPress={(e) => { e.key === 'Enter' && e.preventDefault()}}>
-                                      <FormControl variant='floating' id='requestType' mt={2} isRequired>
+                                      <FormControl variant='floating' id='requestType' mt={2}>
                                         <Input 
                                           name={"date"}
                                           data-query={'third_period_actual_end'} 
@@ -1541,112 +1440,108 @@ export default function ViewForm(
                                           id={pipGoals[i].id} 
                                           mt={4} 
                                           type="date" 
-                                          defaultValue={pipGoals[i].third_period_actual_end ? new Date(pipGoals[i].third_period_actual_end).toLocaleDateString('en-CA') : null}
+                                          defaultValue={pipGoals[i].third_period_actual_end ? new Date(pipGoals[i].third_period_actual_end).toISOString().substring(0, 10) : null}
                                           readOnly={userData.ffID == pipData.originator_ffid ? false : true}  
                                           data-for-mail={true}
                                         />
                                         <FormLabel>3rd Period</FormLabel>
-                                        <InputRightElement width='4.5rem' mt={5}>
-                                          <IconButton 
-                                            colorScheme={'green'} 
-                                            ml={6} 
-                                            size={'sm'} 
-                                            icon={<EditIcon />}
-                                            type="submit"
-                                            isDisabled={buttonControl}
-                                            hidden={userData.ffID == pipData.originator_ffid ? false : true} 
-                                          />
-                                        </InputRightElement>
                                       </FormControl>
-                                    </form>
                                   </GridItem>
-                                </Grid>
-                                <div hidden={(pipGoals[i].third_period_actual_start && pipGoals[i].third_period_actual_end) ? false : true}>
-                                  <Grid
-                                    templateColumns='repeat(8, 1fr)'
-                                    gap={4}
-                                    px={4}
-                                    pt={3}
+                                  </Grid>
+                                  <div 
+                                    hidden={userData.ffID == pipData.originator_ffid ? false : true}
                                   >
-                                    <GridItem colSpan={4}>
-                                      <FormLabel fontSize='md'>Supervisor Remarks</FormLabel>
-                                      <form onSubmit={handleFileUpload} onKeyPress={(e) => { e.key === 'Enter' && e.preventDefault()}}>
-                                        <FormControl variant='floating' id='requestType' mt={2} isRequired>
-                                          <Input 
-                                            name={"file"}
-                                            data-query={'first_period_actual_end'} 
-                                            data-pip-id={pipGoals[i].pip_id}
-                                            data-goal-id={pipGoals[i].id}
-                                            data-is-summary={0}
-                                            id={3} 
-                                            mt={4} 
-                                            type="file"
-                                            multiple 
-                                            //readOnly={userData.ffID == pipData.originator_ffid ? false : true}
-                                          />
-                                          <FormLabel>Attach Evidence</FormLabel>
-                                        </FormControl>
-                                        <FormControl variant='floating' id='requestType' mt={2}>
-                                          <Textarea 
-                                            name={"supervisor_remarks"}
-                                            data-query={'third_period_remarks'} 
-                                            id={pipGoals[i].id} 
-                                            mt={4} 
-                                            type="text"
-                                            //readOnly={userData.ffID == pipData.originator_ffid ? false : true}
-                                          >
-                                          </Textarea>
-                                          <FormLabel>Remarks</FormLabel>
-                                        </FormControl>
-                                        <Button 
-                                          colorScheme={'green'} 
-                                          type={"submit"} 
-                                          mt={4}
-                                          isDisabled={buttonControl}
-                                        >
-                                          Submit
-                                        </Button>
-                                      </form>
-                                    </GridItem>
-                                    <GridItem colSpan={4} 
-                                      borderColor={'900.grey'}
-                                      borderWidth={'1px'}
-                                      maxWidth={"460px"}
+                                    <Box
+                                      borderRadius='lg' 
+                                      overflow='hidden'
+                                      borderWidth='1px'
+                                      m={4}
+                                      p={5}
                                     >
                                       <Grid
-                                        // templateRows='repeat(2, 1fr)'
-                                        // templateColumns='repeat(3, 1fr)'
-                                        // gap={4}
-                                        margin={2}
-                                        gap={2}
+                                        templateColumns='repeat(8, 1fr)'
+                                        gap={4}
+                                        px={4}
                                       >
-                                        {resThirdPeriodAttachment?.map((uploads) => (
-                                          <GridItem colSpan={1}>
-                                            <Tag
-                                              size={'sm'}
-                                              key={'sm'}
-                                              borderRadius='full'
-                                              variant='solid'
-                                              colorScheme='green'
-                                              style={{"word-wrap": "break-word"}}
-                                              maxWidth={"300px"}
-                                            >
-                                              <TagLabel>{uploads.uploadName}</TagLabel>
-                                              <a href={`/uploads/`+uploads.uploadName} download>
-                                                <IconButton 
-                                                  icon={<DownloadIcon />} 
-                                                  size={'xs'} 
-                                                  colorScheme={'green'} 
-                                                />
-                                              </a>
-                                            </Tag>
-                                          </GridItem>
+                                        <GridItem colSpan={4}>
+                                          <FormLabel fontSize='md'>Supervisor Remarks</FormLabel>
+                                            <FormControl variant='floating' id='requestType' mt={2}>
+                                              <Input 
+                                                name={"file"}
+                                                data-query={'first_period_actual_end'} 
+                                                data-pip-id={pipGoals[i].pip_id}
+                                                data-goal-id={pipGoals[i].id}
+                                                data-is-summary={0}
+                                                id={3} 
+                                                mt={4} 
+                                                type="file"
+                                                multiple 
+                                              />
+                                              <FormLabel>Attach Evidence</FormLabel>
+                                            </FormControl>
+                                            <FormControl variant='floating' id='requestType' mt={2}>
+                                              <Textarea 
+                                                name={"supervisor_remarks"}
+                                                data-query={'third_period_remarks'} 
+                                                id={pipGoals[i].id} 
+                                                mt={4} 
+                                                type="text"
+                                              >
+                                              </Textarea>
+                                              <FormLabel>Remarks</FormLabel>
+                                            </FormControl>
+                                            
+                                        </GridItem>
+                                        <GridItem colSpan={4} 
+                                          borderColor={'900.grey'}
+                                          borderWidth={'1px'}
+                                          maxWidth={"460px"}
+                                        >
+                                          <Grid
+                                            margin={2}
+                                            gap={2}
+                                          >
+                                            {resThirdPeriodAttachment?.map((uploads, i) => (
+                                              <GridItem colSpan={1} key={i}>
+                                                <Tag
+                                                  size={'sm'}
+                                                  key={'sm'}
+                                                  borderRadius='full'
+                                                  variant='solid'
+                                                  colorScheme='green'
+                                                  style={{"wordWrap": "break-word"}}
+                                                  maxWidth={"300px"}
+                                                >
+                                                  <TagLabel>{uploads.uploadName}</TagLabel>
+                                                  <a 
+                                                    href={(window.location.origin).substring(0,(window.location.origin).length - 5)+`:`+process.env.NEXT_PUBLIC_DOWNLOAD_PORT+`/`+uploads.uploadName} 
+                                                    target="_blank"
+                                                  >
+                                                    <IconButton 
+                                                      icon={<DownloadIcon />} 
+                                                      size={'xs'} 
+                                                      colorScheme={'green'} 
+                                                    />
+                                                  </a>
+                                                </Tag>
+                                              </GridItem>
 
-                                        ))}
+                                            ))}
+                                          </Grid>
+                                        </GridItem>
                                       </Grid>
-                                    </GridItem>
-                                  </Grid>
-                                </div>
+                                    </Box>
+                                  </div>
+                                  <Button 
+                                    colorScheme={'green'} 
+                                    type={"submit"} 
+                                    mt={4}
+                                    isDisabled={buttonControl}
+                                    hidden={userData.ffID == pipData.originator_ffid ? false : true}
+                                  >
+                                    Update Third Period
+                                  </Button>
+                                </form>
                                 <Checkbox 
                                   mt={5} 
                                   id={pipGoals[i].id} 
@@ -1678,8 +1573,8 @@ export default function ViewForm(
                                             </Tr>
                                           </Thead>
                                           <Tbody>
-                                            {resThirdPeriod?.map(item => (
-                                              <Tr>
+                                            {resThirdPeriod?.map((item, i) => (
+                                              <Tr key={i}>
                                                 <Td style={{"whiteSpace": "pre-wrap"}}>{item.task}</Td>
                                                 <Td>{new Date(item.start_date).toLocaleDateString()}</Td>
                                                 <Td>{new Date(item.end_date).toLocaleDateString()}</Td>
@@ -1809,10 +1704,10 @@ export default function ViewForm(
                                                   </Box>
                                                   <Box>
                                                     <IconButton 
-                                                      title='APPROVED' 
+                                                      title='ACKNOWLEDGED' 
                                                       colorScheme={'green'} 
                                                       icon={<CheckIcon />} 
-                                                      onClick={() => {setSignoffStatus('APPROVED')}} 
+                                                      onClick={() => {setSignoffStatus('ACKNOWLEDGED')}} 
                                                       type="submit"
                                                       isDisabled={buttonControl}
                                                     />
@@ -1871,10 +1766,10 @@ export default function ViewForm(
                                                     </Box>
                                                     <Box>
                                                       <IconButton 
-                                                        title='APPROVED' 
+                                                        title='ACKNOWLEDGED' 
                                                         colorScheme={'green'} 
                                                         icon={<CheckIcon />} 
-                                                        onClick={() => {setSignoffStatus('APPROVED')}} 
+                                                        onClick={() => {setSignoffStatus('ACKNOWLEDGED')}} 
                                                         type="submit"
                                                         isDisabled={buttonControl}
                                                       />
@@ -1984,15 +1879,15 @@ export default function ViewForm(
                               margin={2}
                               gap={2}
                             >
-                              {resSummaryAttachment?.map((uploads) => (
-                                <GridItem colSpan={1}>
+                              {resSummaryAttachment?.map((uploads, i) => (
+                                <GridItem colSpan={1} key={i}>
                                   <Tag
                                     size={'sm'}
                                     key={'sm'}
                                     borderRadius='full'
                                     variant='solid'
                                     colorScheme='green'
-                                    style={{"word-wrap": "break-word"}}
+                                    style={{"wordWrap": "break-word"}}
                                     maxWidth={"300px"}
                                   >
                                     <TagLabel 
@@ -2001,8 +1896,8 @@ export default function ViewForm(
                                       {uploads.uploadName}
                                     </TagLabel>
                                     <a 
-                                      href={`/uploads/`+uploads.uploadName}
-                                      download
+                                      href={(window.location.origin).substring(0,(window.location.origin).length - 5)+`:`+process.env.NEXT_PUBLIC_DOWNLOAD_PORT+`/`+uploads.uploadName} 
+                                      target="_blank"
                                     >
                                       <IconButton 
                                         icon={<DownloadIcon />} 
@@ -2066,10 +1961,10 @@ export default function ViewForm(
                                           </Box>
                                           <Box>
                                             <IconButton 
-                                              title='APPROVED' 
+                                              title='ACKNOWLEDGED' 
                                               colorScheme={'green'} 
                                               icon={<CheckIcon />} 
-                                              onClick={() => {setSignoffStatus('APPROVED')}} 
+                                              onClick={() => {setSignoffStatus('ACKNOWLEDGED')}} 
                                               type="submit"
                                               isDisabled={buttonControl}
                                             />
@@ -2106,10 +2001,10 @@ export default function ViewForm(
                                           </Box>
                                           <Box>
                                             <IconButton 
-                                              title='APPROVED' 
+                                              title='ACKNOWLEDGED' 
                                               colorScheme={'green'} 
                                               icon={<CheckIcon />} 
-                                              onClick={() => {setSignoffStatus('APPROVED')}} 
+                                              onClick={() => {setSignoffStatus('ACKNOWLEDGED')}} 
                                               type="submit"
                                               isDisabled={buttonControl}
                                             />
@@ -2134,7 +2029,7 @@ export default function ViewForm(
                         mb={4}
                         borderColor={useColorModeValue('gray.800', 'gray.500')}
                         borderWidth={'1px'}
-                        hidden={(pipData.hr_manager_approval_status == "APPROVED" && pipData.department_head_approval_status == "APPROVED" && pipData.isPIPEmployeeReady == 1) ? false : true}
+                        hidden={(pipData.hr_manager_approval_status == "ACKNOWLEDGED" && pipData.department_head_approval_status == "ACKNOWLEDGED" && pipData.isPIPEmployeeReady == 1) ? false : true}
                       >
                         <HStack className="row" w={"100%"}>
                           <Heading fontSize="4xl" fontWeight="0px">Final Employee Sign-off</Heading>
@@ -2179,10 +2074,10 @@ export default function ViewForm(
                                               </Box>
                                               <Box>
                                                 <IconButton 
-                                                  title='APPROVED' 
+                                                  title='ACKNOWLEDGED' 
                                                   colorScheme={'green'} 
                                                   icon={<CheckIcon />} 
-                                                  onClick={() => {setSignoffStatus('APPROVED')}} 
+                                                  onClick={() => {setSignoffStatus('ACKNOWLEDGED')}} 
                                                   type="submit"
                                                   isDisabled={buttonControl}
                                                 />

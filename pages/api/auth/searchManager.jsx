@@ -22,7 +22,7 @@ export default function handler(req, res) {
         }
         else{
           var searchOptions = {
-            attributes: ['sAMAccountName','givenName','sn','mail','thumbnailPhoto','displayname','department','title','manager'],
+            //attributes: ['sAMAccountName','givenName','sn','mail','thumbnailPhoto','displayname','department','title','manager'],
           }
        
           client.search(managerAddress, searchOptions, (err, search) => {

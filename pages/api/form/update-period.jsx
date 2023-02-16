@@ -4,25 +4,39 @@ import { sendMail } from '../../../lib/nodemailer';
 export default async (req, res) => {
   if (req.method === 'POST') {
     const {
-      date,
+      startDate,
+      endDate,
       id,
-      queryString,
-      forMail,
-      pipID
+      startQuery,
+      endQuery,
+      remarks,
+      period,
+      goalID
     } = req.body
+    if(startDate || endDate){
+      let queryString = `UPDATE pip_goals SET `
 
+      if(startDate){
+        queryString += `${startQuery} = '${startDate}'`
+      }
+  
+      if(endDate){
+        if(startDate){
+          queryString += `, `
+        }
+        queryString += `${endQuery} = '${endDate}'`
+      }   
+  
+      queryString += ` WHERE id = ${goalID}`
+  
       try {
         query(
-          `UPDATE pip_goals SET `+queryString+` = ? WHERE id = ?`,
-          [
-            date,
-            id
-          ]
+          queryString,
         )
-
-        const getResult = await query(`SELECT * FROM pip WHERE id = ?`, pipID)
+        const getResult = await query(`SELECT * FROM pip WHERE id = ?`, id)
         // For Prod
-        var to = getResult[0].originator_mail+","+getResult[0].department_head_mail
+        // var to = getResult[0].originator_mail
+        var to = getResult[0].originator_mail+","+getResult[0].department_head_mail+","+getResult[0].employee_mail
         var body =`  
           <style>
             body
@@ -62,7 +76,7 @@ export default async (req, res) => {
               <td>${getResult[0].current_status}</td>
               <td>${getResult[0].employee_name}</td>
               <td>${getResult[0].employee_departmentcode}</td>
-              <td><a href='http://phsm01ws014.ad.onsemi.com:3115/view?pipID=${getResult[0].formID}'>VIEW</a></td>
+              <td><a href='${process.env.NEXT_PUBLIC_HOST_ADDRESS}:${process.env.NEXT_PUBLIC_PORT}/viewPIP?ID=${getResult[0].formID}'>VIEW</a></td>
             </tr>
           </table>
           <br>
@@ -70,14 +84,13 @@ export default async (req, res) => {
           <p style='color:red'>This is an automated mail, Please do not reply.</p>
           <p>Applications Engineering | E-PIP</p>
         ` 
-
-        forMail ? sendMail(to,getResult[0].current_status,body) : console.log(forMail)
+  
+        sendMail(to,getResult[0].current_status,body)
         res.json("success")
       }catch(e){
         res.status(500).json(e)
       } 
-    
-    
+    }
   }else {
     return res.status(405).json({ error: `Method '${req.method}' Not Allowed` });
   }

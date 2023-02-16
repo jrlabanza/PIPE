@@ -13,9 +13,9 @@ export default async function handler(req, res) {
       const mw = multer(
         {
             storage: multer.diskStorage({
-              destination: './public/uploads',
+              destination: './uploads',
               filename: function (req, file, cb) {
-                const newName = Date.now()+ '-' +file.originalname
+                const newName = Date.now()+"."+file.originalname.split('.').reverse()[0]
                 return cb(null, newName)
               }
             }),

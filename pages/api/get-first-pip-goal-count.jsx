@@ -13,7 +13,7 @@ const handler = async (req, res) => {
       `
       SELECT COUNT(*) as periodCount
       FROM pip_goals
-      WHERE pip_id = ? AND (first_period_employee_approval = 'APPROVED' AND first_period_department_head_approval = 'APPROVED')
+      WHERE pip_id = ? AND (first_period_employee_approval = 'ACKNOWLEDGED' AND first_period_department_head_approval = 'ACKNOWLEDGED')
     `,
       id
     )

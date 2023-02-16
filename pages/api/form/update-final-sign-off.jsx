@@ -23,7 +23,7 @@ export default async (req, res) => {
       )
       const getResult = await query(`SELECT * FROM pip WHERE id = ?`, id)
       
-      if(getResult[0].department_head_approval_status == "APPROVED" && getResult[0].hr_manager_approval_status == "APPROVED"){
+      if(getResult[0].department_head_approval_status == "ACKNOWLEDGED" && getResult[0].hr_manager_approval_status == "ACKNOWLEDGED"){
         var to = getResult[0].employee_mail
         var body =`  
           <style>
@@ -64,7 +64,7 @@ export default async (req, res) => {
               <td>${getResult[0].current_status}</td>
               <td>${getResult[0].employee_name}</td>
               <td>${getResult[0].employee_departmentcode}</td>
-              <td><a href='http://phsm01ws014.ad.onsemi.com:3115/view?pipID=${getResult[0].formID}'>VIEW</a></td>
+              <td><a href='${process.env.NEXT_PUBLIC_HOST_ADDRESS}:${process.env.NEXT_PUBLIC_PORT}/viewPIP?ID=${getResult[0].formID}'>VIEW</a></td>
             </tr>
           </table>
           <br>

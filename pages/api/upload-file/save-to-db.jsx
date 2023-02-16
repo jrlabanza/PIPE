@@ -15,13 +15,14 @@ export default async (req, res, next) => {
 
       file.map((data) => {
         query(
-          `INSERT INTO uploads SET uploadName = ?, pipID = ?, goalID = ?, period = ?, isSummary = ?`,
+          `INSERT INTO uploads SET uploadName = ?, pipID = ?, goalID = ?, period = ?, isSummary = ?, originalFileName = ?`,
           [
             data.filename,
             pip_id,
             goal_id,
             period,
-            isSummary
+            isSummary,
+            data.originalname
           ] 
         )
       })

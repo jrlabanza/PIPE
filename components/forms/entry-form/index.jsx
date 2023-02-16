@@ -49,6 +49,8 @@ export default function EntryForm({setToastMessage}) {
   const [FFID, setFFID] = useState('')
   const [mail, setMail] = useState('')
   const searchEmployee = () => {
+    const formData = new FormData() 
+    
     try{
       axios({
         method: 'post',
@@ -66,7 +68,6 @@ export default function EntryForm({setToastMessage}) {
         if (response.data.status_code != 200){
           setSearchResults(response.data.error_message.lde_message)
         }
-        console.log(response)
         var Myelement = document.getElementById("displayname")
         Myelement.value = response.data.user_data.displayName
         setSearchResults(response.data.user_data.displayName)
@@ -176,7 +177,7 @@ export default function EntryForm({setToastMessage}) {
           rounded={'lg'}
           mb={4}
           borderColor={useColorModeValue('gray.800', 'gray.500')}
-          borderWidth={'1px'}
+          // borderWidth={'1px'}
         >
           <HStack className="row">
             <Heading fontSize="4xl" fontWeight="0px">Performance Improvement Plan</Heading>

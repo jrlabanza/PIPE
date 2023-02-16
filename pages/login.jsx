@@ -17,15 +17,16 @@ import { useState } from 'react';
 import Cookies from 'js-cookie'
 import axios from 'axios';
 import Router from 'next/router'
-import LargeWithLogoCentered from '@/components/footer';
+import LargeWithLogoCentered from '@/components/footer'
+import { useRouter } from 'next/router'
+import { convertFD2JSON } from '../components/functions'
 
 export default function SplitScreen() {
-  const [ ADAccount, setADAccount ] = useState('')
-  const [ password, setPassword ] = useState('')
+
   const [ submitting, setSubmitting ] = useState(false)
   const toast = useToast()
   const handleSubmit = async (event) => {
-  
+    const formData = new FormData(event.currentTarget)
     try{
       event.preventDefault()
       setSubmitting(true)
@@ -36,14 +37,11 @@ export default function SplitScreen() {
         headers: { 'Accept': 'application/json',
         'Content-Type': 'application/json' 
         },
-        data: {
-          "username": ADAccount,
-          "password": password
-        }
+        data: convertFD2JSON(formData)
       })
       .then(async function (response){
         // check if admin
-
+        Cookies.set('token', response.data.token)
         axios({
           method: 'post',
           url: '/api/auth/checkIfAdmin',
@@ -51,11 +49,8 @@ export default function SplitScreen() {
             'Accept': 'application/json',
             'Content-Type': 'application/json' 
           },
-          data: {
-            "ffID": ADAccount
-          }
+          data: convertFD2JSON(formData)
         }).then((response => {
-          console.log(response.data.is_admin)
           response.data.is_admin === 1 ? Cookies.set('isAdmin', true) : Cookies.set('isAdmin', false)
         }))
 
@@ -70,22 +65,54 @@ export default function SplitScreen() {
           })
         }
         //Get Supervisor Data
+        // const supervisorData = await axios({ 
+        //   method: 'post',
+        //   url: '/api/auth/searchManager',
+        //   headers: { 'Accept': 'application/json',
+        //   'Content-Type': 'application/json' 
+        //   },
+        //   data: {
+        //     "username": ADAccount,
+        //     "password": password,
+        //     "managerAddress": response.data.user_data.manager
+        //   }
+        // })
+
         const supervisorData = await axios({ 
           method: 'post',
-          url: '/api/auth/searchManager',
+          url: '/api/auth/searchDeptman',
           headers: { 'Accept': 'application/json',
           'Content-Type': 'application/json' 
           },
           data: {
-            "username": ADAccount,
-            "password": password,
-            "managerAddress": response.data.user_data.manager
+            "dept_code": response.data.user_data.department            
           }
         })
 
+        if(supervisorData.data.ffid == null){
+          Cookies.remove('ffID')
+          Cookies.remove('fullname')
+          Cookies.remove('mail')
+          Cookies.remove('thumbnailPhoto')
+          Cookies.remove('title')
+          Cookies.remove('authorized')
+          Cookies.remove('manager')
+          Cookies.remove('manager_mail')
+          Cookies.remove('location')
+          Cookies.remove('isAdmin')
+          return toast({
+            title: "Account Warning",
+            description: "Your department code has not been registered in the system, Contact HR or APPS team with this issue",
+            status: "error",
+            duration: 10000,
+            isClosable: true,
+          })
+          
+        }
+        
         //Set Cookie
         Cookies.set('ffID', response.data.user_data.sAMAccountName)
-        Cookies.set('token', password)
+        
         Cookies.set('fullname', response.data.user_data.displayName)
         Cookies.set('mail', response.data.user_data.mail)
         Cookies.set('department', response.data.user_data.department)
@@ -104,9 +131,14 @@ export default function SplitScreen() {
         else{
           Cookies.set('location', 'VIS')
         }
-        Cookies.set("manager", supervisorData.data.user_data.displayName)
-        Cookies.set("manager_mail", supervisorData.data.user_data.mail)
-        Cookies.set("manager_ffID", supervisorData.data.user_data.sAMAccountName)
+
+        // Cookies.set("manager", supervisorData.data.user_data.displayName)
+        // Cookies.set("manager_mail", supervisorData.data.user_data.mail)
+        // Cookies.set("manager_ffID", supervisorData.data.user_data.sAMAccountName)
+
+        Cookies.set("manager", supervisorData.data.first_name+" "+supervisorData.data.last_name)
+        Cookies.set("manager_mail", supervisorData.data.email)
+        Cookies.set("manager_ffID", supervisorData.data.ffid)
 
         toast({
           title: "Login Success",
@@ -158,17 +190,15 @@ export default function SplitScreen() {
               <FormControl id="email">
                 <FormLabel>AD Account</FormLabel>
                 <Input 
+                  name="username"
                   type="text"
-                  onChange={(e) => setADAccount(e.target.value)}
-                  value={ADAccount}  
                 />
               </FormControl>
               <FormControl id="password">
                 <FormLabel>Password</FormLabel>
                 <Input 
+                  name="password"
                   type="password"
-                  onChange={(e) => setPassword(e.target.value)} 
-                  value={password}
                 />
               </FormControl>
               <Stack spacing={6}>
