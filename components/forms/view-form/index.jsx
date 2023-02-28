@@ -78,15 +78,16 @@ export default function ViewForm(
     /*Period Date Controller*/
     const handlePeriod = (event) => {
       event.preventDefault()
-      // console.log(event.target)
-      // console.log("Goal ID",event.target[2].id)// goal id
-      // console.log("PIP ID", event.target[2].getAttribute(`data-pip-id`)) //pip id
-      // console.log("Actual Start", event.target[2].value)//start
-      // console.log("Actual End", event.target[3].value)//end
-      // console.log("Period Query Start", event.target[2].getAttribute(`data-query`))
-      // console.log("Period Query End", event.target[3].getAttribute(`data-query`))
-      // console.log("Period", event.target[4].id)
-      // console.log("Remarks", event.target[5].value)
+      console.log(event.target)
+      console.log("Goal ID",event.target[2].id)// goal id
+      console.log("PIP ID", event.target[2].getAttribute(`data-pip-id`)) //pip id
+      console.log("Actual Start", event.target[2].value)//start
+      console.log("Actual End", event.target[3].value)//end
+      console.log("Period Query Start", event.target[2].getAttribute(`data-query`))
+      console.log("Period Query End", event.target[3].getAttribute(`data-query`))
+      console.log("Period", event.target[4].id)
+      console.log("Remarks", event.target[5].value)
+      console.log("Remarks Query", event.target[5].getAttribute(`name`))
       const formData = new FormData(event.currentTarget)
       if(confirm("Confirm Action?")){
         setButtonControl(true)
@@ -108,7 +109,8 @@ export default function ViewForm(
             endQuery: event.target[3].getAttribute(`data-query`),
             remarks: event.target[5].value,
             period: event.target[4].id,
-            goalID: event.target[2].id
+            goalID: event.target[2].id,
+            remarksQuery: event.target[5].getAttribute(`name`)
           }
         })
         .then((response) => {
@@ -119,36 +121,35 @@ export default function ViewForm(
           setButtonControl(false)
           setToastMessage(["Error", err.message, "error"])
         })
-      }
-
-      axios({
-        method:'post',
-        url: '/api/upload-file',
-        headers: { 
-          'Accept': 'application/json',
-          'Content-Type': 'application/json' 
-        },
-        data: formData
-      })
-      .then(async response => {
-        const uploadDBres = await axios({
+        axios({
           method:'post',
-          url: '/api/upload-file/save-to-db',
+          url: '/api/upload-file',
           headers: { 
             'Accept': 'application/json',
             'Content-Type': 'application/json' 
           },
-          data:{
-            "file": response.data.file,
-            "pip_id": event.target[4].getAttribute(`data-pip-id`),
-            "goal_id": event.target[2].id,
-            "period": event.target[4].id,
-            "isSummary": 0,
-          }
+          data: formData
         })
-        setButtonControl(false)
-        setToastMessage(["Upload Successful", "", "success"])
-      })
+        .then(async response => {
+          const uploadDBres = await axios({
+            method:'post',
+            url: '/api/upload-file/save-to-db',
+            headers: { 
+              'Accept': 'application/json',
+              'Content-Type': 'application/json' 
+            },
+            data:{
+              "file": response.data.file,
+              "pip_id": event.target[4].getAttribute(`data-pip-id`),
+              "goal_id": event.target[2].id,
+              "period": event.target[4].id,
+              "isSummary": 0,
+            }
+          })
+          setButtonControl(false)
+          setToastMessage(["Upload Successful", "", "success"])
+        })
+      }
     }
 
     /*Approval Controller*/
@@ -741,12 +742,15 @@ export default function ViewForm(
                                             </FormControl>
                                             <FormControl variant='floating' id='requestType' mt={2} >
                                               <Textarea 
-                                                name={"supervisor_remarks"}
+                                                name={"first_period_supervisor_remarks"}
                                                 data-query={'first_period_remarks'} 
                                                 id={pipGoals[i].id} 
                                                 mt={4} 
                                                 type="text"
                                               >
+                                                {
+                                                  pipGoals[i].first_period_supervisor_remarks
+                                                }
                                               </Textarea>
                                               <FormLabel>Remarks</FormLabel>
                                             </FormControl>
@@ -1112,12 +1116,15 @@ export default function ViewForm(
                                           </FormControl>
                                           <FormControl variant='floating' id='requestType' mt={2}>
                                             <Textarea 
-                                              name={"supervisor_remarks"}
+                                              name={"second_period_supervisor_remarks"}
                                               data-query={'second_period_remarks'} 
                                               id={pipGoals[i].id} 
                                               mt={4} 
                                               type="text"
                                             >
+                                              {
+                                                pipGoals[i].second_period_supervisor_remarks
+                                              }
                                             </Textarea>
                                             <FormLabel>Remarks</FormLabel>
                                           </FormControl>
@@ -1481,12 +1488,15 @@ export default function ViewForm(
                                             </FormControl>
                                             <FormControl variant='floating' id='requestType' mt={2}>
                                               <Textarea 
-                                                name={"supervisor_remarks"}
+                                                name={"third_period_supervisor_remarks"}
                                                 data-query={'third_period_remarks'} 
                                                 id={pipGoals[i].id} 
                                                 mt={4} 
                                                 type="text"
                                               >
+                                                {
+                                                  pipGoals[i].third_period_supervisor_remarks
+                                                }
                                               </Textarea>
                                               <FormLabel>Remarks</FormLabel>
                                             </FormControl>
@@ -1856,6 +1866,9 @@ export default function ViewForm(
                                   type="text"
                                   //readOnly={userData.ffID == pipData.originator_ffid ? false : true}
                                 >
+                                  {
+                                    pipData.supervisor_remarks
+                                  }
                                 </Textarea>
                                 <FormLabel>Remarks</FormLabel>
                               </FormControl>

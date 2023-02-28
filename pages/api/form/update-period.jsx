@@ -11,7 +11,8 @@ export default async (req, res) => {
       endQuery,
       remarks,
       period,
-      goalID
+      goalID,
+      remarksQuery
     } = req.body
     if(startDate || endDate){
       let queryString = `UPDATE pip_goals SET `
@@ -33,6 +34,8 @@ export default async (req, res) => {
         query(
           queryString,
         )
+        const updateRemarks = await query(`UPDATE pip_goals SET ${remarksQuery} = '${remarks}' WHERE id = ${goalID}`)
+        console.log(updateRemarks)
         const getResult = await query(`SELECT * FROM pip WHERE id = ?`, id)
         // For Prod
         // var to = getResult[0].originator_mail

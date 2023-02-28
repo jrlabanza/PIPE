@@ -26,6 +26,7 @@ export default function SplitScreen() {
   const [ submitting, setSubmitting ] = useState(false)
   const toast = useToast()
   const handleSubmit = async (event) => {
+    document.cookie.split(";").forEach(function(c) { document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); });
     const formData = new FormData(event.currentTarget)
     try{
       event.preventDefault()

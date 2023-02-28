@@ -52,16 +52,17 @@ export default function withAction({
   const router = useRouter()
   
   function onLogout(){
-    Cookies.remove('ffID')
-    Cookies.remove('fullname')
-    Cookies.remove('mail')
-    Cookies.remove('thumbnailPhoto')
-    Cookies.remove('title')
-    Cookies.remove('authorized')
-    Cookies.remove('manager')
-    Cookies.remove('manager_mail')
-    Cookies.remove('location')
-    Cookies.remove('isAdmin')
+    // Cookies.remove('ffID')
+    // Cookies.remove('fullname')
+    // Cookies.remove('mail')
+    // Cookies.remove('thumbnailPhoto')
+    // Cookies.remove('title')
+    // Cookies.remove('authorized')
+    // Cookies.remove('manager')
+    // Cookies.remove('manager_mail')
+    // Cookies.remove('location')
+    // Cookies.remove('isAdmin')
+    document.cookie.split(";").forEach(function(c) { document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); });
     router.push('/login')
   }
 
