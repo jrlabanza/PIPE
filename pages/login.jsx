@@ -25,6 +25,7 @@ export default function SplitScreen() {
 
   const [ submitting, setSubmitting ] = useState(false)
   const toast = useToast()
+
   const handleSubmit = async (event) => {
     document.cookie.split(";").forEach(function(c) { document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); });
     const formData = new FormData(event.currentTarget)
@@ -32,18 +33,41 @@ export default function SplitScreen() {
       event.preventDefault()
       setSubmitting(true)
 
-      axios({
+      const response = await axios({
         method: 'post',
         url: '/api/auth/ldap',
-        headers: { 'Accept': 'application/json',
-        'Content-Type': 'application/json' 
+        headers: { 
+          'Accept': 'application/json',
+          'Content-Type': 'application/json' 
         },
         data: convertFD2JSON(formData)
       })
-      .then(async function (response){
+      .catch(function (error){
+        setSubmitting(false)
+        return toast({
+          title: "Login Error",
+          description: error.message,
+          status: "error",
+          duration: 4000,
+          isClosable: true,
+          position:"top-right"
+        })
+      })
+    
+      if(response.data.authorized == true){
         // check if admin
+        toast({
+          title: "LDAP Authentication Successful",
+          description: "Checking User Priviledges",
+          status: "info",
+          duration: 4000,
+          isClosable: true,
+          position:"top-right"
+        })
+      
         Cookies.set('token', response.data.token)
-        axios({
+        
+        const isAdmin = await axios({ // check admin priviledges
           method: 'post',
           url: '/api/auth/checkIfAdmin',
           headers: { 
@@ -51,9 +75,9 @@ export default function SplitScreen() {
             'Content-Type': 'application/json' 
           },
           data: convertFD2JSON(formData)
-        }).then((response => {
-          response.data.is_admin === 1 ? Cookies.set('isAdmin', true) : Cookies.set('isAdmin', false)
-        }))
+        })
+
+        isAdmin.data.is_admin === 1 ? Cookies.set('isAdmin', true) : Cookies.set('isAdmin', false)
 
         setSubmitting(false)
         if(response.data.status_code != 200){
@@ -63,21 +87,9 @@ export default function SplitScreen() {
             status: "error",
             duration: 4000,
             isClosable: true,
+            position:"top-right"
           })
         }
-        //Get Supervisor Data
-        // const supervisorData = await axios({ 
-        //   method: 'post',
-        //   url: '/api/auth/searchManager',
-        //   headers: { 'Accept': 'application/json',
-        //   'Content-Type': 'application/json' 
-        //   },
-        //   data: {
-        //     "username": ADAccount,
-        //     "password": password,
-        //     "managerAddress": response.data.user_data.manager
-        //   }
-        // })
 
         const supervisorData = await axios({ 
           method: 'post',
@@ -91,29 +103,19 @@ export default function SplitScreen() {
         })
 
         if(supervisorData.data.ffid == null){
-          Cookies.remove('ffID')
-          Cookies.remove('fullname')
-          Cookies.remove('mail')
-          Cookies.remove('thumbnailPhoto')
-          Cookies.remove('title')
-          Cookies.remove('authorized')
-          Cookies.remove('manager')
-          Cookies.remove('manager_mail')
-          Cookies.remove('location')
-          Cookies.remove('isAdmin')
+          document.cookie.split(";").forEach(function(c) { document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); });
           return toast({
             title: "Account Warning",
             description: "Your department code has not been registered in the system, Contact HR or APPS team with this issue",
             status: "error",
             duration: 10000,
             isClosable: true,
+            position:"top-right"
           })
-          
         }
-        
+
         //Set Cookie
         Cookies.set('ffID', response.data.user_data.sAMAccountName)
-        
         Cookies.set('fullname', response.data.user_data.displayName)
         Cookies.set('mail', response.data.user_data.mail)
         Cookies.set('department', response.data.user_data.department)
@@ -133,10 +135,6 @@ export default function SplitScreen() {
           Cookies.set('location', 'VIS')
         }
 
-        // Cookies.set("manager", supervisorData.data.user_data.displayName)
-        // Cookies.set("manager_mail", supervisorData.data.user_data.mail)
-        // Cookies.set("manager_ffID", supervisorData.data.user_data.sAMAccountName)
-
         Cookies.set("manager", supervisorData.data.first_name+" "+supervisorData.data.last_name)
         Cookies.set("manager_mail", supervisorData.data.email)
         Cookies.set("manager_ffID", supervisorData.data.ffid)
@@ -147,20 +145,10 @@ export default function SplitScreen() {
           status: "success",
           duration: 4000,
           isClosable: true,
+          position:"top-right"
         })
-        
         Router.push('/')
-      })
-      .catch(function (error){
-        setSubmitting(false)
-        return toast({
-          title: "Login Error",
-          description: error.message,
-          status: "error",
-          duration: 4000,
-          isClosable: true,
-        })
-      })
+      }
     }
     catch(err){
       setSubmitting(false)
@@ -170,6 +158,7 @@ export default function SplitScreen() {
         status: "error",
         duration: 4000,
         isClosable: true,
+        position:"top-right"
       })
     }
   }
