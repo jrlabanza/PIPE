@@ -18,6 +18,7 @@ import Cookies from 'js-cookie'
 import axios from 'axios';
 import Router from 'next/router'
 import LargeWithLogoCentered from '@/components/footer'
+import { useRouter } from 'next/router'
 import { convertFD2JSON } from '../components/functions'
 
 export default function SplitScreen() {
@@ -31,17 +32,29 @@ export default function SplitScreen() {
     try{
       event.preventDefault()
       // setSubmitting(true)
+
       const response = await axios({
         method: 'post',
-        url: process.env.NEXT_PUBLIC_LDAP_ADDRESS+`/api/user/login`,
+        url: '/api/auth/ldap',
         headers: { 
           'Accept': 'application/json',
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json' 
         },
         data: convertFD2JSON(formData)
       })
+      .catch(function (error){
+        setSubmitting(false)
+        return toast({
+          title: "Login Error",
+          description: error.message,
+          status: "error",
+          duration: 4000,
+          isClosable: true,
+          position:"top-right"
+        })
+      })
     
-      if(response.data.done == 'TRUE'){
+      if(response.data.authorized == true){
         // check if admin
         toast({
           title: "LDAP Authentication Successful",
@@ -52,6 +65,8 @@ export default function SplitScreen() {
           position:"top-right"
         })
       
+        Cookies.set('token', response.data.token)
+        
         const isAdmin = await axios({ // check admin priviledges
           method: 'post',
           url: '/api/auth/checkIfAdmin',
@@ -65,6 +80,16 @@ export default function SplitScreen() {
         isAdmin.data.is_admin === 1 ? Cookies.set('isAdmin', true) : Cookies.set('isAdmin', false)
 
         setSubmitting(false)
+        if(response.data.status_code != 200){
+          return toast({
+            title: "Login Error",
+            description: response.data.error_message.lde_message,
+            status: "error",
+            duration: 4000,
+            isClosable: true,
+            position:"top-right"
+          })
+        }
 
         const supervisorData = await axios({ 
           method: 'post',
@@ -73,7 +98,7 @@ export default function SplitScreen() {
           'Content-Type': 'application/json' 
           },
           data: {
-            "dept_code": response.data.department            
+            "dept_code": response.data.user_data.department            
           }
         })
 
@@ -90,29 +115,29 @@ export default function SplitScreen() {
         }
 
         //Set Cookie
-        Cookies.set('ffID', response.data.ffID)
-        Cookies.set('fullname', response.data.fullname)
-        Cookies.set('mail', response.data.mail)
-        Cookies.set('department', response.data.department)
-        Cookies.set('thumbnailPhoto', response.data.thumbnailPhoto)
-        Cookies.set('title', response.data.title)
-        Cookies.set('authorized', response.data.done)
-        if((response.data.department).toString().substring(0,3) == "564"){
+        Cookies.set('ffID', response.data.user_data.sAMAccountName)
+        Cookies.set('fullname', response.data.user_data.displayName)
+        Cookies.set('mail', response.data.user_data.mail)
+        Cookies.set('department', response.data.user_data.department)
+        Cookies.set('thumbnailPhoto', response.data.user_data.thumbnailPhoto)
+        Cookies.set('title', response.data.user_data.title)
+        Cookies.set('authorized', response.data.authorized)
+        if((response.data.user_data.department).toString().substring(0,3) == "564"){
           Cookies.set('location', 'TAR')
         }
-        else if((response.data.department).toString().substring(0,3) == "561"){
+        else if((response.data.user_data.department).toString().substring(0,3) == "561"){
           Cookies.set('location', 'CAR')
         }
-        else if((response.data.department).toString().substring(0,3) == "566"){
+        else if((response.data.user_data.department).toString().substring(0,3) == "566"){
           Cookies.set('location', 'CEB')
         }
         else{
           Cookies.set('location', 'VIS')
         }
 
-        Cookies.set("manager", supervisorData.data.manager)
-        Cookies.set("manager_mail", supervisorData.data.manager_mail)
-        Cookies.set("manager_ffID", supervisorData.data.manager_ffID)
+        Cookies.set("manager", supervisorData.data.first_name+" "+supervisorData.data.last_name)
+        Cookies.set("manager_mail", supervisorData.data.email)
+        Cookies.set("manager_ffID", supervisorData.data.ffid)
 
         toast({
           title: "Login Success",
@@ -123,16 +148,6 @@ export default function SplitScreen() {
           position:"top-right"
         })
         Router.push('/')
-      }
-      else{
-        toast({
-          title: "Login Error",
-          description: response.data.msg,
-          status: "error",
-          duration: 4000,
-          isClosable: true,
-          position:"top-right"
-        })
       }
     }
     catch(err){
@@ -165,7 +180,7 @@ export default function SplitScreen() {
               <FormControl id="email">
                 <FormLabel>AD Account</FormLabel>
                 <Input 
-                  name="ffID"
+                  name="username"
                   type="text"
                 />
               </FormControl>

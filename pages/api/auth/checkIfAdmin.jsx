@@ -1,7 +1,7 @@
 import { query } from '../../../lib/db'
 
 const handler = async (req, res) => {
-  const { username } = req.body
+  const { ffID } = req.body
   try {
     const results = await query(
       `
@@ -9,7 +9,7 @@ const handler = async (req, res) => {
         FROM users
         WHERE ffid = ? AND is_admin = 1
       `,
-      username
+      ffID
     )
 
     return res.json(results[0])

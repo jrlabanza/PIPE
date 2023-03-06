@@ -53,36 +53,43 @@ export default function EntryForm({setToastMessage}) {
     
     try{
       axios({
-        method: 'post',
-        url: '/api/auth/searchLDAP',
+        method: 'get',
+        url: process.env.NEXT_PUBLIC_LDAP_ADDRESS+`/api/user/search?searchString=${searchQuery}`,
         headers: { 'Accept': 'application/json',
         'Content-Type': 'application/json' 
-        },
-        data: {
-          "username": Cookies.get('ffID'),
-          "password": Cookies.get('token'),
-          "searchQuery": searchQuery
         }
       })
       .then((response) => {
-        if (response.data.status_code != 200){
-          setSearchResults(response.data.error_message.lde_message)
-        }
         var Myelement = document.getElementById("displayname")
-        Myelement.value = response.data.user_data.displayName
-        setSearchResults(response.data.user_data.displayName)
-        setDepartmentCode(response.data.user_data.department)
-        setJobDescription(response.data.user_data.title)
-        setFFID(response.data.user_data.sAMAccountName)
-        setMail(response.data.user_data.mail)
+        Myelement.value = response.data.Properties.displayname
+        setSearchResults(response.data.Properties.displayname)
+        setDepartmentCode(response.data.Properties.department)
+        setJobDescription(response.data.Properties.title)
+        setFFID(response.data.Properties.samaccountName)
+        setMail(response.data.Properties.mail)
       })
       .catch((err) => {
         setSearchResults(err)
-        console.log(err)
+        console.log(err.message)
+        toast({
+          title: "Error",
+          description: `No results found`,
+          status: "error",
+          duration: 4000,
+          isClosable: true,
+          position:"top-right"
+        })
       })
     }
     catch(err){
-      console.log(err)
+      toast({
+        title: "Error",
+        description: err,
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+        position:"top-right"
+      })
     }
   }
 
