@@ -13,7 +13,7 @@ const handler = async (req, res) => {
       `
       SELECT *
       FROM pip
-      WHERE formID = ? ORDER BY id DESC
+      WHERE formID = ? AND isDeleted = 0 ORDER BY id DESC
     `,
       id
     )

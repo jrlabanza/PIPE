@@ -6,7 +6,7 @@ const handler = async (req, res) => {
     const results = await query(
       `
       SELECT *
-      FROM pip WHERE employee_ffid = ? OR department_head_ffid = ? OR hr_manager_ffid = ? OR originator_ffid = ? ORDER BY id DESC
+      FROM pip WHERE (employee_ffid = ? OR department_head_ffid = ? OR hr_manager_ffid = ? OR originator_ffid = ?) AND isDeleted = 0 ORDER BY id DESC
       `,
       [ffid,ffid,ffid,ffid]
     )

@@ -5,7 +5,7 @@ const handler = async (req, res) => {
     const results = await query(
       `
       SELECT *
-      FROM pip ORDER BY id DESC
+      FROM pip WHERE isDeleted = 0 ORDER BY id DESC
       `
     )
 
