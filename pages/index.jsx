@@ -16,7 +16,7 @@ import { useEffect, useState } from 'react'
 import Navbar from '@/components/navbar'
 import LargeWithLogoCentered from '@/components/footer'
 import { useColorModeValue } from '@chakra-ui/color-mode'
-
+//
 export default function IndexPage({Component, pageProps}) {
   const toast = useToast()
   const [ filter, setFilter ] = useState()
