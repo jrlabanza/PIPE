@@ -158,7 +158,9 @@ export default function Summary(
               justifyContent={'center'} 
               mt={8} 
               mb={8} 
-              hidden={pipData.isPIPEmployeeReady == 0 && pipData.originator_ffid == userData.ffID ? false : true}
+              hidden={
+                pipData.isPIPEmployeeReady == 0 && pipData.originator_ffid == userData.ffID && pipData.department_head_approval_status == "ACKNOWLEDGED" && pipData.hr_manager_approval_status == "ACKNOWLEDGED" ? false : true
+              }
             >
               <form onSubmit={handleShowPIPtoEmployee} onKeyPress={(e) => { e.key === 'Enter' && e.preventDefault()}}>
                 <Button colorScheme={'red'} type={'submit'}>SHOW RESULT TO EMPLOYEE</Button>

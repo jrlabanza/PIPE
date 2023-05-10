@@ -77,17 +77,17 @@ export default function SplitScreen() {
           }
         })
 
-        if(supervisorData.data.ffid == null){
-          document.cookie.split(";").forEach(function(c) { document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); });
-          return toast({
-            title: "Account Warning",
-            description: "Your department code has not been registered in the system, Contact HR or APPS team with this issue",
-            status: "error",
-            duration: 10000,
-            isClosable: true,
-            position:"top-right"
-          })
-        }
+        // if(supervisorData.data.ffid == null){
+        //   document.cookie.split(";").forEach(function(c) { document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); });
+        //   toast({
+        //     title: "Account Warning",
+        //     description: "Your department code has not been registered in the system, Contact HR or APPS team with this issue",
+        //     status: "error",
+        //     duration: 100000,
+        //     isClosable: false,
+        //     position:"top"
+        //   })
+        // }
 
         //Set Cookie
         Cookies.set('ffID', response.data.ffID)
@@ -110,9 +110,9 @@ export default function SplitScreen() {
           Cookies.set('location', 'VIS')
         }
 
-        Cookies.set("manager", supervisorData.data.manager)
-        Cookies.set("manager_mail", supervisorData.data.manager_mail)
-        Cookies.set("manager_ffID", supervisorData.data.manager_ffID)
+        Cookies.set("manager", supervisorData.data.first_name+" "+supervisorData.data.last_name)
+        Cookies.set("manager_mail", supervisorData.data.email)
+        Cookies.set("manager_ffID", supervisorData.data.ffid)
 
         toast({
           title: "Login Success",

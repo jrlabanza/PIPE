@@ -37,6 +37,18 @@ export default function IndexPage({Component, pageProps}) {
   }, [Cookies.get('authorized')])
 
   useEffect(() => {
+    if(Cookies.get('manager_ffID') == "undefined"){
+      toast({
+        title: "Account Warning",
+        description: "Your department code has not been registered in the system, you might encounter issues when submitting PIP. To register department code, please Contact HR or APPS team with this issue",
+        status: "warning",
+        duration: 100000,
+        isClosable: true,
+        position:"top-right"
+      })
+    }
+  }, [Cookies.get('manager_ffID')])
+  useEffect(() => {
     if(annoucement){
       if (!toast.isActive(id)) {
         toast({

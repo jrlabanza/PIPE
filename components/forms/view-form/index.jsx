@@ -74,7 +74,7 @@ export default function ViewForm(
     useEffect(() => { 
       pipData?.current_status == "PROGRAM CLOSED" ? setButtonControl(true) : null
     }, [pipData?.current_status])
-
+    console.log(pipGoals)
     /*Period Date Controller*/
     const handlePeriod = (event) => {
       event.preventDefault()
@@ -711,7 +711,7 @@ export default function ViewForm(
                                     </GridItem>
                                   </Grid>
                                   <div
-                                    hidden={userData.ffID == pipData.originator_ffid ? false : true} 
+                                    // hidden={userData.ffID == pipData.originator_ffid ? false : true} 
                                   >
                                     <Box
                                       borderRadius='lg' 
@@ -727,7 +727,7 @@ export default function ViewForm(
                                       >
                                         <GridItem colSpan={4}>
                                           <FormLabel fontSize='md'>Supervisor Remarks</FormLabel>
-                                            <FormControl variant='floating' id='requestType' mt={2}>
+                                            <FormControl variant='floating' id='requestType' mt={2} hidden={userData.ffID == pipData.originator_ffid ? false : true}>
                                               <Input 
                                                 name={"file"}
                                                 data-pip-id={pipGoals[i].pip_id}
@@ -747,6 +747,7 @@ export default function ViewForm(
                                                 id={pipGoals[i].id} 
                                                 mt={4} 
                                                 type="text"
+                                                readOnly={userData.ffID == pipData.originator_ffid ? false : true}
                                               >
                                                 {
                                                   pipGoals[i].first_period_supervisor_remarks
@@ -816,7 +817,7 @@ export default function ViewForm(
                                   isDisabled={buttonControl}
                                   hidden={userData.ffID == pipData.originator_ffid ? false : true}
                                 >
-                                  Employee did not met Goal/s
+                                  Employee did not meet Goal/s
                                 </Checkbox>
                                 <div hidden={pipGoals[i].has_first_period_capa == 1 ? false : true}>
                                   <Container 
@@ -826,7 +827,7 @@ export default function ViewForm(
                                     mt={4}
                                   >
                                     <FormLabel fontSize='xl' mt={2}>
-                                      CAPA
+                                      Corrective Action / Preventive Action
                                     </FormLabel>
                                     <TableContainer>
                                         <Table size={'sm'}>
@@ -1084,7 +1085,7 @@ export default function ViewForm(
                                   </GridItem>
                                 </Grid>
                                 <div 
-                                  hidden={userData.ffID == pipData.originator_ffid ? false : true}
+                                  // hidden={userData.ffID == pipData.originator_ffid ? false : true}
                                 >
                                   <Box
                                     borderRadius='lg' 
@@ -1100,7 +1101,7 @@ export default function ViewForm(
                                     >
                                       <GridItem colSpan={4}>
                                         <FormLabel fontSize='md'>Supervisor Remarks</FormLabel>
-                                          <FormControl variant='floating' id='requestType' mt={2}>
+                                          <FormControl variant='floating' id='requestType' mt={2} hidden={userData.ffID == pipData.originator_ffid ? false : true}>
                                             <Input 
                                               name={"file"}
                                               data-query={'first_period_actual_end'} 
@@ -1121,6 +1122,7 @@ export default function ViewForm(
                                               id={pipGoals[i].id} 
                                               mt={4} 
                                               type="text"
+                                              readOnly={userData.ffID == pipData.originator_ffid ? false : true}
                                             >
                                               {
                                                 pipGoals[i].second_period_supervisor_remarks
@@ -1190,7 +1192,7 @@ export default function ViewForm(
                                   isDisabled={buttonControl}
                                   hidden={userData.ffID == pipData.originator_ffid ? false : true}
                                 >
-                                  Employee did not met Goal/s
+                                  Employee did not meet Goal/s
                                 </Checkbox>
                                 <div hidden={pipGoals[i].has_second_period_capa == 1 ? false : true}>
                                   <Container 
@@ -1456,7 +1458,7 @@ export default function ViewForm(
                                   </GridItem>
                                   </Grid>
                                   <div 
-                                    hidden={userData.ffID == pipData.originator_ffid ? false : true}
+                                    // hidden={userData.ffID == pipData.originator_ffid ? false : true}
                                   >
                                     <Box
                                       borderRadius='lg' 
@@ -1472,7 +1474,7 @@ export default function ViewForm(
                                       >
                                         <GridItem colSpan={4}>
                                           <FormLabel fontSize='md'>Supervisor Remarks</FormLabel>
-                                            <FormControl variant='floating' id='requestType' mt={2}>
+                                            <FormControl variant='floating' id='requestType' mt={2} hidden={userData.ffID == pipData.originator_ffid ? false : true}>
                                               <Input 
                                                 name={"file"}
                                                 data-query={'first_period_actual_end'} 
@@ -1493,6 +1495,7 @@ export default function ViewForm(
                                                 id={pipGoals[i].id} 
                                                 mt={4} 
                                                 type="text"
+                                                readOnly={userData.ffID == pipData.originator_ffid ? false : true}
                                               >
                                                 {
                                                   pipGoals[i].third_period_supervisor_remarks
@@ -1561,7 +1564,7 @@ export default function ViewForm(
                                   isDisabled={buttonControl}
                                   hidden={userData.ffID == pipData.originator_ffid ? false : true} 
                                 >
-                                  Employee did not met Goal/s
+                                  Employee did not meet Goal/s
                                 </Checkbox>
                                 <div hidden={pipGoals[i].has_third_period_capa == 1 ? false : true}>
                                   <Container 
@@ -1830,7 +1833,7 @@ export default function ViewForm(
                         borderWidth={'1px'}
                       >
                         <HStack className="row" w={"100%"}>
-                          <Heading fontSize="4xl" fontWeight="0px">Supervisor Remarks</Heading>
+                          <Heading fontSize="4xl" fontWeight="0px">Summary Supervisor Remarks</Heading>
                         </HStack>
                         <Divider/>
                         <Grid
@@ -1842,7 +1845,7 @@ export default function ViewForm(
                         >
                           <GridItem colSpan={4}>
                             <form onSubmit={handleFileUpload} onKeyPress={(e) => { e.key === 'Enter' && e.preventDefault()}}>
-                              <FormControl variant='floating' id='requestType' mt={2} isRequired>
+                              <FormControl variant='floating' id='requestType' mt={2} isRequired hidden={userData.ffID == pipData.originator_ffid ? false : true}>
                                 <Input 
                                   name={"file"}
                                   data-query={'first_period_actual_end'} 
@@ -1864,7 +1867,7 @@ export default function ViewForm(
                                   // id={pipGoals[i].id} 
                                   mt={4} 
                                   type="text"
-                                  //readOnly={userData.ffID == pipData.originator_ffid ? false : true}
+                                  readOnly={userData.ffID == pipData.originator_ffid ? false : true}
                                 >
                                   {
                                     pipData.supervisor_remarks
@@ -1877,6 +1880,7 @@ export default function ViewForm(
                                 type={"submit"} 
                                 mt={4}
                                 isDisabled={buttonControl}
+                                hidden={userData.ffID == pipData.originator_ffid ? false : true}
                               >
                                 Submit
                               </Button>

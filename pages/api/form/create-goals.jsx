@@ -37,11 +37,11 @@ export default async (req, res) => {
           )
         VALUES (
           ?,
-          ?,
-          ?,
-          ?,
-          ?,
-          ?,
+          AES_ENCRYPT(?, 'pipencrypt'),
+          AES_ENCRYPT(?, 'pipencrypt'),
+          AES_ENCRYPT(?, 'pipencrypt'),
+          AES_ENCRYPT(?, 'pipencrypt'),
+          AES_ENCRYPT(?, 'pipencrypt'),
           ?,
           ?,
           ?,

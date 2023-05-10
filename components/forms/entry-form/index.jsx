@@ -49,8 +49,11 @@ export default function EntryForm({setToastMessage}) {
   const [FFID, setFFID] = useState('')
   const [mail, setMail] = useState('')
   const searchEmployee = () => {
-    const formData = new FormData() 
-    
+    setSearchResults('')
+    setDepartmentCode('')
+    setJobDescription('')
+    setFFID('')
+    setMail('')
     try{
       axios({
         method: 'get',
@@ -65,7 +68,7 @@ export default function EntryForm({setToastMessage}) {
         setSearchResults(response.data.Properties.displayname)
         setDepartmentCode(response.data.Properties.department)
         setJobDescription(response.data.Properties.title)
-        setFFID(response.data.Properties.samaccountName)
+        setFFID(response.data.Properties.samaccountname)
         setMail(response.data.Properties.mail)
       })
       .catch((err) => {
